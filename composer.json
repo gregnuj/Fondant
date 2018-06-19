@@ -32,11 +32,11 @@
             "Fondant\\Test\\": "tests",
             "Cake\\Test\\": "./vendor/cakephp/cakephp/tests"
         }
-    }
+    },
     "extra": {
         "require-bower": {
             "jquery": "*"
         }
-    },
+    }
 }
 
