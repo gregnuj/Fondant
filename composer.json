@@ -7,7 +7,7 @@
     "license": "MIT",
     "authors": [
             {
-               "name": "Greg Junge",
+               "name": "Greg Junge"
         }
     ],
     "require": {
@@ -16,7 +16,6 @@
         "cakephp/plugin-installer": "^1.0",
         "wyrihaximus/twig-view": "^4.3.4",
         "koala-framework/composer-extra-assets": "dev-master"
-
     },
     "require-dev": {
         "cakephp/cakephp-codesniffer": "^3.0",
