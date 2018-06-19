@@ -6,8 +6,8 @@
     "homepage": "https://github.com/gregnuj/fondant",
     "license": "MIT",
     "authors": [
-            {
-               "name": "Greg Junge"
+        {
+           "name": "Greg Junge"
         }
     ],
     "require": {
