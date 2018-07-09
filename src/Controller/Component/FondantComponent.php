@@ -40,7 +40,15 @@ class FondantComponent extends Component
         $model = $controller->name;
         $displayField = $controller->{$model}->displayField();
         $fields = $controller->{$model}->schema()->columns();
-        $searchFields = array_combine($fields, $fields);
+        $fieldNames = [];
+        foreach($fields as $i => $field){
+            $fieldNames[$i] = Inflector::humanize($field);
+            if (stripos($fieldNames[$i], ' Id')){
+                 $fieldNames[$i] = substr($fieldNames[$i], 0, -3);
+            }
+        }
+        $searchFields = array_combine($fields, $fieldNames);
+
         $controller->set(compact('displayField', 'searchFields'));
     }
 
