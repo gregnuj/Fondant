@@ -1,0 +1,41 @@
+{
+  "name": "fondant",
+  "version": "1.0.0",
+  "description": "CakePHP Fondant Plugin",
+  "main": "index.php",
+  "dependencies": {
+    "grunt": "^1.0.2",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-symlink": "^1.0.0",
+    "@bower_components/bootstrap": "~3.3.7",
+    "@bower_components/jquery": "^3.3.1",
+    "@bower_components/jquery-ui": "^1.12.1",
+    "@bower_components/datatables.net-autofill-bs": "~2.1.2",
+    "@bower_components/datatables.net-autofill": "~2.1.2",
+    "@bower_components/datatables.net-bs": "~1.10.12",
+    "@bower_components/datatables.net-buttons-bs": "~1.2.2",
+    "@bower_components/datatables.net-buttons": "~1.2.2",
+    "@bower_components/datatables.net-colreorder-bs": "~1.3.2",
+    "@bower_components/datatables.net-colreorder": "~1.3.2",
+    "@bower_components/datatables.net-fixedcolumns-bs": "~3.2.2",
+    "@bower_components/datatables.net-fixedcolumns": "~3.2.2",
+    "@bower_components/datatables.net-fixedheader-bs": "~3.1.2",
+    "@bower_components/datatables.net-fixedheader": "~3.1.2",
+    "@bower_components/datatables.net-keytable-bs": "~2.1.3",
+    "@bower_components/datatables.net-keytable": "~2.1.3",
+    "@bower_components/datatables.net-responsive-bs": "~2.1.0",
+    "@bower_components/datatables.net-responsive": "~2.1.0",
+    "@bower_components/datatables.net-scroller-bs": "~1.4.2",
+    "@bower_components/datatables.net-scroller": "~1.4.2",
+    "@bower_components/datatables.net-select-bs": "~1.2.0",
+    "@bower_components/datatables.net-select": "~1.2.0",
+    "@bower_components/datatables.net": "~1.10.12",
+    "@bower_components/select2": "^4.0.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "gregnuj",
+  "license": "MIT"
+}
