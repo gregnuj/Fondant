@@ -15,11 +15,16 @@
         "cakephp/cakephp": "^3.6.0",
         "cakephp/plugin-installer": "^1.0",
         "wyrihaximus/twig-view": "^4.3.4",
-        "koala-framework/composer-extra-assets": "~1.1"
+        "foxy/foxy": "^1.0.0"
     },
     "require-dev": {
         "cakephp/cakephp-codesniffer": "^3.0",
         "phpunit/phpunit": "^5.7.14|^6.0"
+    },
+    "config": {
+        "foxy": {
+            "manager": "yarn"
+        }
     },
     "autoload": {
         "psr-4": {
@@ -30,11 +35,6 @@
         "psr-4": {
             "Fondant\\Test\\": "tests",
             "Cake\\Test\\": "./vendor/cakephp/cakephp/tests"
-        }
-    },
-    "extra": {
-        "require-bower": {
-            "jquery": "*"
         }
     }
 }
