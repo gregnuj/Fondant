@@ -5,7 +5,9 @@ use Cake\Core\ConventionsTrait;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Utility\Hash;
+use Cake\Utility\Inflector;
 use Bake\View\Helper\BakeHelper;
+use Cake\Event\Event;
 
 /**
  * FondantComponent component
@@ -33,6 +35,10 @@ class FondantComponent extends Component
     public function initialize(array $config)
     {
         parent::initialize($config);
+    }
+    
+    public function beforeFilter(Event $event){
+        $this->_setSearchVars();
     }
 
     protected function _setSearchVars(){
@@ -233,6 +239,9 @@ class FondantComponent extends Component
             ->first();
     }
 
+    /**
+     * View method
+     */
     public function index($param = null)
     {
         $query = $this->_find();
@@ -334,8 +343,34 @@ class FondantComponent extends Component
         }
         return $controller->redirect(['action' => 'index']);
     }
-
+    
     protected function _getconditions(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $conditions = [];
+        if ($columns = $controller->request->getQuery('columns')){
+            foreach ($columns as $column){
+                if (!empty($column['data'])){
+                    $table = $controller->name;
+                    if (substr($column['data'], -3) == '_id'){
+                        $table = $this->_modelNameFromKey($column['data']);
+                        $searchField = $controller->{$model}->{$table}->displayField();
+                    }else{
+                        $searchField = $column['data'];
+                    }
+                    if (!empty($column['search']['value'])){
+                        $conditions[] = "{$table}.{$searchField} = '{$column['search']['value']}'";
+                    }elseif(!empty($column['search']['regex'])){
+                        $conditions[] = "{$table}.{$searchField} regexp '{$column['search']['regex']}'";                    
+                    }
+                }
+                
+            }
+        }
+        return $conditions;
+    }
+
+    protected function _getconditionsX(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $conditions = [];
