@@ -190,7 +190,7 @@ class FondantComponent extends Component
             if (isset($controller->{$model}->hiddenColumns[$action])){
                 $hiddenColumns = $controller->{$model}->hiddenColumns[$action];
             }
-	}
+	    }
         $controller->set(compact('hiddenColumns'));
     }
     
@@ -201,6 +201,9 @@ class FondantComponent extends Component
             ->select($this->_getFields())
             ->contain($this->_getContain())
             ->where($this->_getConditions())
+            ->order($this->_getOrder())
+            ->limit($this->_getLimit())
+            ->page($this->_getPage())
         ;
     }
 
@@ -240,15 +243,42 @@ class FondantComponent extends Component
     }
 
     /**
-     * View method
+     * Index method
      */
     public function index($param = null)
     {
-        $query = $this->_find();
-        $controller = $this->_registry->getController();
-        $variableName = $this->_variableName($controller->name);
-        $controller->set($variableName, $controller->paginate($query));
-        $controller->set('_serialize', [ $variableName ]);
+        
+        if ($this->request->is('ajax') || $this->request->is('json')  ){
+            $controller = $this->_registry->getController();
+            $model = $controller->name;
+            $variableName = $this->_variableName($controller->name);
+            
+            # build base query
+            $query = $controller->{$model}->find()
+                ->select($this->_getFields())
+                ->contain($this->_getContain())
+            ;
+            
+            # get count of total records
+            $recordsTotal = $query->count();
+            
+            # add Conditions and get filtered count
+            $query = $query->where($this->_getConditions());
+            $recordsFiltered = $query->count();
+            
+            # get length and page
+            $draw = $controller->request->getQuery('draw');
+            $page = $this->_getPage();
+            $length = $this->_getLimit();
+            $query = $query    
+                ->order($this->_getOrder())
+                ->limit($length)
+                ->page($page)
+            ;
+            $controller->set(compact('draw', 'length', 'page', 'recordsTotal', 'recordsFiltered'));
+            $controller->set($variableName, $query);
+            $controller->set('_serialize', [ 'draw', 'length', 'page', 'recordsTotal', 'recordsFiltered', $variableName ]);
+        }
     }
 
     /**
@@ -344,33 +374,39 @@ class FondantComponent extends Component
         return $controller->redirect(['action' => 'index']);
     }
     
-    protected function _getconditions(){
+    protected function _getConditions(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
-        $conditions = [];
+        $associations = $controller->{$model}->associations();
+        $conditions = $this->_getConditionsLegacy();
         if ($columns = $controller->request->getQuery('columns')){
             foreach ($columns as $column){
+                $table = false;
                 if (!empty($column['data'])){
-                    $table = $controller->name;
-                    if (substr($column['data'], -3) == '_id'){
-                        $table = $this->_modelNameFromKey($column['data']);
-                        $searchField = $controller->{$model}->{$table}->displayField();
-                    }else{
+                    foreach ($associations as $name => $association){
+                        $fk = $association->getForeignKey();
+                        if ($column['data'] == $fk){
+                            $table = $name;
+                            $searchField = $association->displayField();
+                            break;
+                        }
+                    }
+                    if (!$table){
+                        $table = $controller->name;
                         $searchField = $column['data'];
                     }
-                    if (!empty($column['search']['value'])){
-                        $conditions[] = "{$table}.{$searchField} = '{$column['search']['value']}'";
-                    }elseif(!empty($column['search']['regex'])){
-                        $conditions[] = "{$table}.{$searchField} regexp '{$column['search']['regex']}'";                    
+                    $operator = $column['search']['regex'] ? 'regexp' : 'like';
+                    if ($column['search']['value'] != false){
+                        $conditions[] = "{$table}.{$searchField} {$operator} '{$column['search']['value']}'";
                     }
                 }
-                
             }
         }
+        $this->log(serialize($conditions));
         return $conditions;
     }
 
-    protected function _getconditionsX(){
+    protected function _getConditionsLegacy(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $conditions = [];
@@ -408,5 +444,44 @@ class FondantComponent extends Component
         }
         return $conditions;
     }
+    
+    protected function _getOrder(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $results = [];
+        if ($order = $controller->request->getQuery('order')){
+            if ($columns = $controller->request->getQuery('columns')){
+                foreach ($order as $ord){
+                    if (!empty($columns[$ord['column']]['data'])){
+                        $results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
+                    }
+                }
+            }
+        }
+        return $results;
+    }
+    
+    protected function _getLimit(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $results = 500;
+        if ($length = $controller->request->getQuery('length')){
+            $results = $length;
+        }elseif ($limit = $controller->request->getQuery('limit')){
+            $results = $limit;  
+        }
+        return $results;
+    }
+    
+    protected function _getPage(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $results = 1;
+        $start = $controller->request->getQuery('start') ? $controller->request->getQuery('start') : 0;
+        $limit = $this->_getLimit();
+        $results = ($start + $limit)/$limit;  
+        return $results;
+    }
+    
 }
 
