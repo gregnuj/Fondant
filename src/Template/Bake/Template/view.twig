@@ -24,28 +24,20 @@
 {% set associationFields = fieldsData.associationFields %}
 {% set groupedFields = fieldsData.groupedFields %}
 {% set pK = '$' ~ singularVar ~ '->' ~ primaryKey[0] %}
-<nav class="large-3 medium-4 columns" id="actions-sidebar">
-    <ul class="side-nav">
-        <li class="heading"><?= __('Actions') ?></li>
-        <li><?= $this->Html->link(__('Edit {{ singularHumanName }}'), ['action' => 'edit', {{ pK|raw }}]) ?> </li>
-        <li><?= $this->Form->postLink(__('Delete {{ singularHumanName }}'), ['action' => 'delete', {{ pK|raw }}], ['confirm' => __('Are you sure you want to delete # {0}?', {{ pK|raw }})]) ?> </li>
-        <li><?= $this->Html->link(__('List {{ pluralHumanName }}'), ['action' => 'index']) ?> </li>
-        <li><?= $this->Html->link(__('New {{ singularHumanName }}'), ['action' => 'add']) ?> </li>
-{% set done = [] %}
-{% for type, data in associations %}
-{% for alias, details in data %}
-{% if details.controller is not same as(_view.name) and details.controller not in done %}
-        <li><?= $this->Html->link(__('List {{ alias|underscore|humanize }}'), ['controller' => '{{ details.controller }}', 'action' => 'index']) ?> </li>
-        <li><?= $this->Html->link(__('New {{ alias|underscore|singularize|humanize }}'), ['controller' => '{{ details.controller }}', 'action' => 'add']) ?> </li>
-{% set done = done|merge(['controller']) %}
-{% endif %}
-{% endfor %}
-{% endfor %}
-    </ul>
-</nav>
+{% set dF = '$' ~ singularVar ~ '->' ~ displayField %}
+
 <div class="{{ pluralVar }} view large-9 medium-8 columns content">
-    <h3><?= h(${{ singularVar }}->{{ displayField }}) ?></h3>
-    <table class="vertical-table">
+    <!-- Panel header -->
+    <div class="card-header clearfix">
+        <h4 class="card-title float-left"><?= h(${{ singularVar }}->{{ displayField }}) ?></h4>
+        <div class="btn-group float-right">
+            <?php if (isset($allowed['All'])): echo $this->Html->link(__('All'), ['action' => $allowed['All']], [ "class" => "btn btn-primary btn-md", "role" => "button"]); endif; ?>
+            <?php if (isset($allowed['Add'])): echo $this->Html->link(__('New'), ['action' => $allowed['Add']], [ "class" => "btn btn-info btn-md", "role" => "button"]); endif; ?>
+            <?php if (isset($allowed['Edit'])): echo $this->Html->link(__('Edit'), ['action' => $allowed['Edit'], {{ pK|raw }}], [ "class" => "btn btn-warning btn-md", "role" => "button"]); endif; ?>
+            <?php if (isset($allowed['Delete'])): echo $this->Form->postLink(__('Delete'), ['action' => $allowed['Delete'], {{ pK|raw }}], ['confirm' => __('Are you sure you want to delete {0} (#{1})?', {{ dF|raw }},{{ pK|raw }}), "class" => "btn btn-danger btn-md", "role" => "button"]); endif; ?>
+        </div>
+    </div>
+    <table class="table table-striped vertical-table">
 {% if groupedFields['string'] %}
 {% for field in groupedFields['string'] %}
 {% if associationFields[field] %}
@@ -106,32 +98,189 @@
 {% set relations = associations.BelongsToMany|merge(associations.HasMany) %}
 {% for alias, details in relations %}
 {% set otherSingularVar = alias|variable %}
+{% set otherPluralVar = otherSingularVar|pluralize %}
 {% set otherPluralHumanName = details.controller|underscore|humanize %}
+{% set otherPk = '$' ~ singularVar ~ '->' ~ otherSingularVar ~ '->' ~ details.primaryKey[0] %}
+    <br/>
     <div class="related">
-        <h4><?= __('Related {{ otherPluralHumanName }}') ?></h4>
         <?php if (!empty(${{ singularVar }}->{{ details.property }})): ?>
-        <table cellpadding="0" cellspacing="0">
+        <h4><?= __('Related {{ otherPluralHumanName }}') ?></h4>
+        <table id="{{ otherPluralVar }}Table" class="dataTable table table-striped table-sm" style="width: 95vw" cellpadding="0" cellspacing="0">
+            <thead>
             <tr>
+                <th style="min-width: 100px" scope="col" class="actions"><?= __('Actions') ?></th>
 {% for field in details.fields %}
-                <th scope="col"><?= __('{{ field|humanize }}') ?></th>
+{% set isKey = false %}
+{% if field ends with '_id' %}
+{% set isKey = true %}
+{% set property = field[0:-3] %}
+                <th style="min-width: 75px" scope="col"><?= __('{{ property|camelize }}') ?></th>
+{% endif %}
+{% if isKey is not same as(true) %}
+                <th style="min-width: 75px" scope="col"><?= __('{{ field|camelize }}') ?></th>
+{% endif %}
 {% endfor %}
-                <th scope="col" class="actions"><?= __('Actions') ?></th>
             </tr>
-            <?php foreach (${{ singularVar }}->{{ details.property }} as ${{ otherSingularVar }}): ?>
-            <tr>
-{% for field in details.fields %}
-                <td><?= h(${{ otherSingularVar }}->{{ field }}) ?></td>
-{% endfor %}
-{% set otherPk = '$' ~ otherSingularVar ~ '->' ~ details.primaryKey[0] %}
-                <td class="actions">
-                    <?= $this->Html->link(__('View'), ['controller' => '{{ details.controller }}', 'action' => 'view', {{ otherPk|raw }}]) ?>
-                    <?= $this->Html->link(__('Edit'), ['controller' => '{{ details.controller }}', 'action' => 'edit', {{ otherPk|raw }}]) ?>
-                    <?= $this->Form->postLink(__('Delete'), ['controller' => '{{ details.controller }}', 'action' => 'delete', {{ otherPk|raw }}], ['confirm' => __('Are you sure you want to delete # {0}?', {{ otherPk|raw }})]) ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
         </table>
         <?php endif; ?>
     </div>
+    
+<?php $this->append('script'); ?>
+<script>
+var responsive = true;
+$(document).ready(function(){
+    //{{ otherPluralVar }}Assoc = $.getJSON("<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'get-associated-details.json']); ?>");
+    
+    table = $('#{{ otherPluralVar }}Table').DataTable({
+        //"dom" : "Brtip",
+        "dom": '<"top">Brtip<"bottom"><"clear">',
+        "buttons": [
+            { extend: 'pageLength', className: 'btn btn-outline-info buttons-collection dropdown-toggle buttons-page-length' },
+            { extend: 'csv', className: 'btn btn-outline-info buttons-csv buttons-html5' },
+            { extend: 'excel', className: 'btn btn-outline-info buttons-excel buttons-html5' },
+            {
+                text: 'Add',
+                className: 'btn btn-outline-info buttons-html5',
+                action: function ( e, dt, node, config ) {
+                    window.location = "<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'add']); ?>";
+                }
+            }
+        ],
+        "paging" : true, 
+        "filter" : true,
+        "orderCellsTop" : true,
+        "fixedHeader" : true,
+        "processing": true,
+        "serverSide": true,
+        "lengthMenu": [[50, 100, 250, 500, 1000, 5000], [50, 100, 250, 500, 1000, "Max"]],
+        "responsive":  responsive,
+        "searchDelay": 750,
+        //"autoWidth" : false,
+        /*
+        {
+            "details": {
+                display: $.fn.dataTable.Responsive.display.modal( {
+                    header: function ( row ) {
+                        var data = row.data();
+                        return 'Details for '+data[0]+' '+data[1];
+                    }
+                } ),
+                renderer: $.fn.dataTable.Responsive.renderer.tableAll()
+            }
+        },
+        */
+        "language": {
+            "processing": "Loading. Please wait..."
+        },
+        "ajax": {
+            "url": "<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'index']); ?>",
+            "data": {
+                'conditions' : "{{ details.controller }}.{{ details.foreignKey }} = '<?= {{ pK|raw }} ?>'"
+            },
+            "dataSrc": "{{otherPluralVar}}"
+        },
+        "columns": [
+                { 
+                    "data" : "{{ details.primaryKey[0] }}",
+                    "name" : "{{ details.primaryKey[0] }}",
+                    "searchable" : false,
+                    "className" : "actions",
+                    "render": function ( data, type, row, meta ) {
+                        retval=""
+                        retval+="<a href='<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'view']); ?>/"+data+"' class='btn btn-success text-white' role='button'><i class='fas fa-arrow-right'></i></a>"                      
+                        retval+="<a href='<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'edit']); ?>/"+data+"' class='btn btn-warning text-white' role='button'><i class='fas fa-edit'></i></a>"
+                        return retval;
+                    }
+                },
+{% for field in details.fields %}
+{% set isKey = false %}
+{% if field ends with '_id' %}
+{% set isKey = true %}
+{% set property = field[0:-3] %}
+{% set assocController = property|pluralize %}
+{% set assocSingularVar = property|variable %}
+{% set assocPluralVar = assocController|variable %}
+                { 
+                    "data" : null, 
+                    "name" : "{{ field }}",
+                    "render": function ( data, type, row, meta ) {
+                        if (data.{{ property }} == null) {
+                            retval="";
+                        }else if (data.{{ property }}.name != null) {
+                            retval="<a href='<?= $this->Url->build(['controller' => '{{ assocController }}', 'action' => 'view']); ?>/"+data.{{ property }}.id+"'>"+data.{{ property }}.name+"</a>";
+                        }else if (data.{{ property }}.title != null) {
+                            retval="<a href='<?= $this->Url->build(['controller' => '{{ assocController }}', 'action' => 'view']); ?>/"+data.{{ property }}.id+"'>"+data.{{ property }}.title+"</a>";
+                        }else{
+                            retval="<a href='<?= $this->Url->build(['controller' => '{{ assocController }}', 'action' => 'view']); ?>/"+data.{{ property }}.id+"'>"+data.{{ property }}.id+"</a>";
+                        }
+                        return retval;
+                    }
+                },
+{% endif %}
+{% if isKey is not same as(true) %}
+                { "data" : "{{field}}", "name" : "{{field}}" },
+{% endif %}
+{% endfor %}
+
+        ]
+    });
+    
+    // Setup - add a text input to each header cell
+    var thead0 = $('#{{ otherPluralVar }}Table thead tr');
+    var thead1 = thead0.clone();
+    thead1.insertAfter(thead0);
+
+    $('#{{ otherPluralVar }}Table thead tr:eq(1) th').each( function () {
+        var title = $(this).text();
+        $(this).removeClass('sorting');
+        $(this).width('0');
+        $(this).html( '<input type="text" style="width:100%" placeholder="'+title+'" />' );
+        //$(this).html( '<input type="text" style="width:100%" placeholder="" />' );
+    } );
+ 
+    // Apply the search
+    table.columns().every( function (index) {
+        var searchWaitInterval;
+        var searchWait = 0;
+        var that = this;
+        var input = $( '#{{ otherPluralVar }}Table thead tr:eq(1) th:eq(' + index + ') input');
+        // wait for user to stop typing
+        input.unbind('keypress keyup').bind('keypress keyup', function(e){
+            var item = this;
+            searchWait = 0;
+            if(!searchWaitInterval) searchWaitInterval = setInterval(function(){
+                if(searchWait>=3){
+                    clearInterval(searchWaitInterval);
+                    searchWaitInterval = '';
+                    if ( that.search() !== item.value ) {
+                        that
+                            .search( item.value )
+                            .draw();
+                    }
+                    searchWait = 0;
+                }
+                searchWait++;
+            },200);
+        });
+    });
+    
+	// workaround https://github.com/DataTables/Responsive/issues/71#issuecomment-360774517 
+    table.on('responsive-resize.dt', function(e, datatable, columns) {
+        columns.forEach(function(is_visible, index) {
+            $.each($('tr', datatable.table().header()), function() {
+                var col = $($(this).children()[index]);
+                        is_visible == true ? col.show() : col.hide();
+            });
+        });
+    });
+});
+</script>
+<?php $this->end(); ?>
 {% endfor %}
 </div>
+

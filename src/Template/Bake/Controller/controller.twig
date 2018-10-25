@@ -51,11 +51,16 @@ class {{ name }}Controller extends AppController
     {{- components|raw }}
 {% endif %}
 
-public function initialize()
-{
-    parent::initialize();
-    $this->loadComponent('Fondant.Fondant');
-}
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadComponent('Fondant.Fondant');
+        $this->loadComponent('Fondant.JqueryUi');
+    }
+
+    public function select2(){
+        $this->JqueryUi->select2();
+    }
 
 
 {%- for action in actions %}

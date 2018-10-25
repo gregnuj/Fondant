@@ -40,92 +40,6 @@ class FondantComponent extends Component
     public function beforeFilter(Event $event){
         $this->_setSearchVars();
     }
-
-    protected function _setSearchVars(){
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $displayField = $controller->{$model}->displayField();
-        $fields = $controller->{$model}->schema()->columns();
-        $fieldNames = [];
-        foreach($fields as $i => $field){
-            $fieldNames[$i] = Inflector::humanize($field);
-            if (stripos($fieldNames[$i], ' Id')){
-                 $fieldNames[$i] = substr($fieldNames[$i], 0, -3);
-            }
-        }
-        $searchFields = array_combine($fields, $fieldNames);
-
-        $controller->set(compact('displayField', 'searchFields'));
-    }
-
-    protected function _getAssociationTypes(){
-        $controller = $this->_registry->getController();
-        if ($controller->request->getData('types')){
-            $types = (array)$controller->request->getData('types');
-        }elseif ($controller->request->getQuery('types')){
-            $types = $controller->request->getQuery('types');
-        }else{
-            $types = ['BelongsTo', 'BelongsToMany', 'HasMany', 'HasOne'];
-        }
-        return $types;
-    }
-    
-    protected function _getAssociationDepth(){
-        $controller = $this->_registry->getController();
-        if ($controller->request->getData('depth') !== null){
-            $depth = $controller->request->getData('depth');
-        }elseif ($controller->request->getQuery('depth') !== null){
-            $depth = $controller->request->getQuery('depth');
-        }else{
-            $depth = 1;
-        }
-        return $depth < 4 ? $depth : 4;
-    }
-
-    protected function _getAssociationList($modelObj, $types){
-        $associations = [];
-        $bake = new BakeHelper(new \Cake\View\View);
-        foreach ((array)$types as $type){
-            $these = $bake->aliasExtractor($modelObj, $type);
-            foreach ($these as $association){
-                $associations[] = $association;
-            }
-        }
-        sort($associations);
-        return $associations;
-    }
-
-    protected function _getAssociations($modelObj, $types, $depth){
-        $contains = [];
-        if ($depth-- > 0){
-            $list = $this->_getAssociationList($modelObj, $types);
-            if (!empty($list)){
-            	foreach ($list as $association){
-                    if ($depth <= 0){
-                        $contains[] = $association;
-                    }else{
-                        $contains[$association] = $this->_getAssociations($modelObj->{$association}->getTarget(), $types, $depth);
-                    }
-                }
-            }
-        }
-        return $contains;
-    }
-
-    public function getAssociationTypes(){
-        $controller = $this->_registry->getController();
-        $controller->set('association_types', $this->_getAssociationTypes());
-        $controller->set('_serialize', 'association_types');
-        $controller->render('App/empty');
-    } 
-
-    protected function _setAssociationList($depth = 1){
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $modelObj = $controller->{$model};
-        $types = $this->_getAssociationTypes();
-        $controller->set('association_list', $this->_getAssociations($modelObj, $types, $depth));
-    }
     
     public function getAssociations(){
         $controller = $this->_registry->getController();
@@ -137,109 +51,32 @@ class FondantComponent extends Component
         $controller->set('_serialize', 'associations');
         $controller->render('App/empty');
     }
-
-    protected function _getContain(){
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $modelObj = $controller->{$model};
-        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
-        if ($controller->request->{$getMethod}('contain')){
-            $contain = (array)$controller->request->{$getMethod}('contain');
-        }else if ($controller->request->{$getMethod}('fields')){
-            $gotFields = (array)$controller->request->{$getMethod}('fields');
-            $contain = [];
-            foreach ($gotFields as $field){
-                $oparts = explode('.', $field);
-                $cparts = array_slice($oparts, 0, -1);
-                $contain[] = implode('.', $cparts);
-            }
-        }else{
-            $types = $this->_getAssociationTypes();
-            $depth = $this->_getAssociationDepth();
-            $contain = $this->_getAssociations($modelObj, $types, $depth);
-        }
-        return $contain;
-    }
-
-    protected function _getFields(){
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $modelObj = $controller->{$model};
-        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
-        if ($controller->request->{$getMethod}('fields')){
-            $gotFields = (array)$controller->request->{$getMethod}('fields');
-            $fields = [];
-            foreach ($gotFields as $field){
-                $oparts = explode('.', $field);
-                $fparts = array_slice($oparts, -2);
-                $fields[] = implode('.', $fparts);
-            }
-        }else{
-            $fields = [];
-        }
-        return $fields;
-    }
-
-
-    protected function _setHiddenColumns(){
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $action = $controller->request->action;
-        $hiddenColumns = [];
-        if (isset($controller->{$model}->hiddenColumns)){
-            if (isset($controller->{$model}->hiddenColumns[$action])){
-                $hiddenColumns = $controller->{$model}->hiddenColumns[$action];
-            }
-	    }
-        $controller->set(compact('hiddenColumns'));
-    }
     
-    protected function _find(){
+    public function getAssociatedDetails(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
-        return $controller->{$model}->find()
-            ->select($this->_getFields())
-            ->contain($this->_getContain())
-            ->where($this->_getConditions())
-            ->order($this->_getOrder())
-            ->limit($this->_getLimit())
-            ->page($this->_getPage())
-        ;
-    }
-
-    protected function _findNone(){
-        return [];
-    }
-
-    protected function _findEntity($param){
-        if (is_numeric($param)){
-            return $this->_findById($param);
-        }else{
-            return $this->_findByName($param);
+        $modelObj = $controller->{$model};
+        $associations = $this->_getAssociations($modelObj, ['BelongsTo'], 1);
+        foreach($associations as &$association){
+            $alias = $association;
+            $association = [];
+            $assoc = $modelObj->association($alias);
+            $target = $assoc->target();
+            // From AssociationFilter
+            $association[$alias] = [
+                'property' => $assoc->property(),
+                'variable' => Inflector::variable($assoc->getName()),
+                'primaryKey' => (array)$target->primaryKey(),
+                'displayField' => $target->displayField(),
+                'foreignKey' => $assoc->foreignKey(),
+                'alias' => $assoc->getAlias(),
+                'controller' => $assoc->getName(), //good enough?
+                'fields' => $target->schema()->columns(),
+            ];
         }
-    }
-
-    protected function _findById($id){
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $primaryKey = (array)$controller->{$model}->primaryKey();
-        return $controller->{$model}->find()
-            ->select($this->_getFields())
-            ->contain($this->_getContain())
-            ->where(["{$model}.{$primaryKey[0]}" => $id])
-            ->first();
-    }
-
-    protected function _findByName($name)
-    {
-        $controller = $this->_registry->getController();
-        $model = $controller->name;
-        $displayField = $controller->{$model}->displayField();
-        return $controller->{$model}->find()
-            ->select($this->_getFields())
-            ->contain($this->_getContain())
-            ->where(["{$model}.{$displayField}" => "$name"])
-            ->first();
+        $controller->set(compact('associations'));
+        $controller->set('_serialize', 'associations');
+        $controller->render('App/empty');
     }
 
     /**
@@ -253,17 +90,20 @@ class FondantComponent extends Component
             $model = $controller->name;
             $variableName = $this->_variableName($controller->name);
             
+            # Filter conditions are processed first
+            
             # build base query
             $query = $controller->{$model}->find()
                 ->select($this->_getFields())
                 ->contain($this->_getContain())
+                ->where($this->_getFilterConditions())
             ;
             
             # get count of total records
             $recordsTotal = $query->count();
             
-            # add Conditions and get filtered count
-            $query = $query->where($this->_getConditions());
+            # add Conditions and get count
+            $query = $query->where($this->_getSearchConditions());
             $recordsFiltered = $query->count();
             
             # get length and page
@@ -275,6 +115,7 @@ class FondantComponent extends Component
                 ->limit($length)
                 ->page($page)
             ;
+            $this->log($query->sql());
             $controller->set(compact('draw', 'length', 'page', 'recordsTotal', 'recordsFiltered'));
             $controller->set($variableName, $query);
             $controller->set('_serialize', [ 'draw', 'length', 'page', 'recordsTotal', 'recordsFiltered', $variableName ]);
@@ -374,31 +215,220 @@ class FondantComponent extends Component
         return $controller->redirect(['action' => 'index']);
     }
     
-    protected function _getConditions(){
+    protected function _setSearchVars(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $displayField = $controller->{$model}->displayField();
+        $fields = $controller->{$model}->schema()->columns();
+        $fieldNames = [];
+        foreach($fields as $i => $field){
+            $fieldNames[$i] = Inflector::humanize($field);
+            if (stripos($fieldNames[$i], ' Id')){
+                 $fieldNames[$i] = substr($fieldNames[$i], 0, -3);
+            }
+        }
+        $searchFields = array_combine($fields, $fieldNames);
+
+        $controller->set(compact('displayField', 'searchFields'));
+    }
+
+    protected function _getAssociationTypes(){
+        $controller = $this->_registry->getController();
+        if ($controller->request->getData('types')){
+            $types = (array)$controller->request->getData('types');
+        }elseif ($controller->request->getQuery('types')){
+            $types = $controller->request->getQuery('types');
+        }else{
+            $types = ['BelongsTo', 'BelongsToMany', 'HasMany', 'HasOne'];
+        }
+        return $types;
+    }
+    
+    protected function _getAssociationDepth(){
+        $controller = $this->_registry->getController();
+        if ($controller->request->getData('depth') !== null){
+            $depth = $controller->request->getData('depth');
+        }elseif ($controller->request->getQuery('depth') !== null){
+            $depth = $controller->request->getQuery('depth');
+        }else{
+            $depth = 1;
+        }
+        return $depth < 4 ? $depth : 4;
+    }
+
+    protected function _getAssociationList($modelObj, $types){
+        $associations = [];
+        $bake = new BakeHelper(new \Cake\View\View);
+        foreach ((array)$types as $type){
+            $these = $bake->aliasExtractor($modelObj, $type);
+            foreach ($these as $association){
+                $associations[] = $association;
+            }
+        }
+        sort($associations);
+        return $associations;
+    }
+
+    protected function _getAssociations($modelObj, $types, $depth){
+        $contains = [];
+        if ($depth-- > 0){
+            $list = $this->_getAssociationList($modelObj, $types);
+            if (!empty($list)){
+            	foreach ($list as $association){
+                    if ($depth <= 0){
+                        $contains[] = $association;
+                    }else{
+                        $contains[$association] = $this->_getAssociations($modelObj->{$association}->getTarget(), $types, $depth);
+                    }
+                }
+            }
+        }
+        return $contains;
+    }
+
+    public function getAssociationTypes(){
+        $controller = $this->_registry->getController();
+        $controller->set('association_types', $this->_getAssociationTypes());
+        $controller->set('_serialize', 'association_types');
+        $controller->render('App/empty');
+    } 
+
+    protected function _setAssociationList($depth = 1){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $modelObj = $controller->{$model};
+        $types = $this->_getAssociationTypes();
+        $controller->set('association_list', $this->_getAssociations($modelObj, $types, $depth));
+    }
+
+    protected function _getContain(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $modelObj = $controller->{$model};
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($controller->request->{$getMethod}('contain')){
+            $contain = (array)$controller->request->{$getMethod}('contain');
+        }else if ($controller->request->{$getMethod}('fields')){
+            $gotFields = (array)$controller->request->{$getMethod}('fields');
+            $contain = [];
+            foreach ($gotFields as $field){
+                $oparts = explode('.', $field);
+                $cparts = array_slice($oparts, 0, -1);
+                $contain[] = implode('.', $cparts);
+            }
+        }else{
+            $types = $this->_getAssociationTypes();
+            $depth = $this->_getAssociationDepth();
+            $contain = $this->_getAssociations($modelObj, $types, $depth);
+        }
+        return $contain;
+    }
+
+    protected function _getFields(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $modelObj = $controller->{$model};
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($controller->request->{$getMethod}('fields')){
+            $gotFields = (array)$controller->request->{$getMethod}('fields');
+            $fields = [];
+            foreach ($gotFields as $field){
+                $oparts = explode('.', $field);
+                $fparts = array_slice($oparts, -2);
+                $fields[] = implode('.', $fparts);
+            }
+        }else{
+            $fields = [];
+        }
+        return $fields;
+    }
+
+
+    protected function _setHiddenColumns(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $action = $controller->request->action;
+        $hiddenColumns = [];
+        if (isset($controller->{$model}->hiddenColumns)){
+            if (isset($controller->{$model}->hiddenColumns[$action])){
+                $hiddenColumns = $controller->{$model}->hiddenColumns[$action];
+            }
+	    }
+        $controller->set(compact('hiddenColumns'));
+    }
+    
+    protected function _find(){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        return $controller->{$model}->find()
+            ->select($this->_getFields())
+            ->contain($this->_getContain())
+            ->where($this->_getFilterConditions())
+            ->where($this->_getSearchConditions())
+            ->order($this->_getOrder())
+            ->limit($this->_getLimit())
+            ->page($this->_getPage())
+        ;
+    }
+
+    protected function _findNone(){
+        return [];
+    }
+
+    protected function _findEntity($param){
+        if (is_numeric($param)){
+            return $this->_findById($param);
+        }else{
+            return $this->_findByName($param);
+        }
+    }
+
+    protected function _findById($id){
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $primaryKey = (array)$controller->{$model}->primaryKey();
+        return $controller->{$model}->find()
+            ->select($this->_getFields())
+            ->contain($this->_getContain())
+            ->where(["{$model}.{$primaryKey[0]}" => $id])
+            ->first();
+    }
+
+    protected function _findByName($name)
+    {
+        $controller = $this->_registry->getController();
+        $model = $controller->name;
+        $displayField = $controller->{$model}->displayField();
+        return $controller->{$model}->find()
+            ->select($this->_getFields())
+            ->contain($this->_getContain())
+            ->where(["{$model}.{$displayField}" => "$name"])
+            ->first();
+    }
+    
+    protected function _getSearchConditions(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $associations = $controller->{$model}->associations();
-        $conditions = $this->_getConditionsLegacy();
+        $conditions = [];
         if ($columns = $controller->request->getQuery('columns')){
             foreach ($columns as $column){
                 $table = false;
-                if (!empty($column['data'])){
+                if ($column['search']['value'] != false){
                     foreach ($associations as $name => $association){
                         $fk = $association->getForeignKey();
-                        if ($column['data'] == $fk){
-                            $table = $name;
+                        if ($column['name'] == $fk){
+                            $table = $association->getName();
                             $searchField = $association->displayField();
                             break;
                         }
                     }
                     if (!$table){
                         $table = $controller->name;
-                        $searchField = $column['data'];
+                        $searchField = $column['name'];
                     }
-                    $operator = $column['search']['regex'] ? 'regexp' : 'like';
-                    if ($column['search']['value'] != false){
-                        $conditions[] = "{$table}.{$searchField} {$operator} '{$column['search']['value']}'";
-                    }
+                    $operator = $column['search']['regex'] == false ? 'like' : 'regexp';
+                    $conditions[] = "{$table}.{$searchField} {$operator} '{$column['search']['value']}'";
                 }
             }
         }
@@ -406,12 +436,12 @@ class FondantComponent extends Component
         return $conditions;
     }
 
-    protected function _getConditionsLegacy(){
+    protected function _getFilterConditions(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $conditions = [];
         if ($controller->request->getQuery('conditions')){
-            $conditions = $controller->request->query['conditions'];
+            $conditions = (array)$controller->request->query['conditions'];
         }
         if ($match = $controller->request->query('match')){
             $conditions[] = "$controller->{$model} regexp '{$match}'";

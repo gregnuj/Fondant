@@ -21,44 +21,25 @@
 ?>
 {% set fields = Bake.filterFields(fields, schema, modelObject, indexColumns, ['binary', 'text']) %}
 
-<!--
-<nav class="large-3 medium-4 columns" id="actions-sidebar">
-    <ul class="side-nav">
-        <li class="heading"><?= __('Actions') ?></li>
-        <li><?= $this->Html->link(__('New {{ singularHumanName }}'), ['action' => 'add']) ?></li>
-{% set done = [] %}
-{% for type, data in associations %}
-{% for alias, details in data %}
-{% if details.navLink and details.controller is not same as(_view.name) and details.controller not in done %}
-        <li><?= $this->Html->link(__('List {{ alias|underscore|humanize }}'), ['controller' => '{{ details.controller }}', 'action' => 'index']) ?></li>
-        <li><?= $this->Html->link(__('New {{ alias|singularize|underscore|humanize }}'), ['controller' => '{{ details.controller }}', 'action' => 'add']) ?></li>
-{% set done = done|merge([details.controller]) %}
-{% endif %}
-{% endfor %}
-{% endfor %}
-    </ul>
-</nav>
--->
 
 <div class="{{ pluralVar }} index large-9 medium-8 columns content">
     <!-- <h3><?= __('{{ pluralHumanName }}') ?></h3> -->
-    <table class="indexTable table table-striped table-sm" style="width: 95vw" cellpadding="0" cellspacing="0">
+    <table id="{{ pluralVar }}Table" class="dataTable table table-striped table-sm" style="width: 95vw" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
+                <th style="min-width: 100px" scope="col" class="actions"><?= __('Actions') ?></th>
 {% for field in fields %}
 {% set isKey = false %}
 {% if associations.BelongsTo %}
 {% for alias, details in associations.BelongsTo if field == details.foreignKey %}
 {% set isKey = true %}
-                <!--<th scope="col"><?= $this->Paginator->sort('{{ field }}') ?></th>-->
-                <th style="min-width: 75px" scope="col"><?= "{{ details.property|humanize }}" ?></th>
+                <th style="min-width: 75px" scope="col"><?= "{{ details.property|camelize }}" ?></th>
 {% endfor %}
 {% endif %}
 {% if isKey is not same as(true) %}
-                <th style="min-width: 75px" scope="col"><?= "{{ field|humanize }}" ?></th>
+                <th style="min-width: 75px" scope="col"><?= "{{ field|camelize }}" ?></th>
 {% endif %}
 {% endfor %}
-                <th style="min-width: 75px" scope="col" class="actions"><?= __('Actions') ?></th>
             </tr>
         </thead>
         <tbody>
@@ -72,15 +53,21 @@
 <script>
 var responsive = true;
 $(document).ready(function(){
-    $('li.paginate-button').css('padding: 1px');
     
-    table = $('.indexTable').DataTable({
+    table = $('#{{ pluralVar }}Table').DataTable({
         //"dom" : "Brtip",
         "dom": '<"top"p>Brtip<"bottom"><"clear">',
         "buttons": [
             { extend: 'pageLength', className: 'btn btn-outline-info buttons-collection dropdown-toggle buttons-page-length' },
             { extend: 'csv', className: 'btn btn-outline-info buttons-csv buttons-html5' },
-            { extend: 'excel', className: 'btn btn-outline-info buttons-excel buttons-html5' }
+            { extend: 'excel', className: 'btn btn-outline-info buttons-excel buttons-html5' },
+            {
+                text: 'Add',
+                className: 'btn btn-outline-info buttons-html5',
+                action: function ( e, dt, node, config ) {
+                    window.location = "<?= $this->Url->build(['action' => 'add']); ?>";
+                }
+            }
         ],
         "paging" : true, 
         "filter" : true,
@@ -105,11 +92,28 @@ $(document).ready(function(){
             }
         },
         */
+        "language": {
+            "processing": "Loading. Please wait..."
+        },
         "ajax": {
-            "url": "<?= $this->request->here(); ?>",
-            "dataSrc": "{{pluralVar}}"
+            "url": "<?= $this->Url->build(['action' => 'index']); ?>",
+            "dataSrc": "{{pluralVar}}",
+            "data" : { 
+                "filter" : <?= json_encode($this->request->getQuery('filter')) ?>,
+            },
         },
         "columns": [
+                { 
+                    "data" : "{{ primaryKey[0] }}",
+                    "name" : "{{ primaryKey[0] }}",
+                    "className" : "actions",
+                    "render": function ( data, type, row, meta ) {
+                        retval=""
+                        retval+="<a href='<?= $this->Url->build(['action' => 'view']); ?>/"+data+"' class='btn btn-success text-white' role='button'><i class='fas fa-arrow-right'></i></a>"                      
+                        retval+="<a href='<?= $this->Url->build(['action' => 'edit']); ?>/"+data+"' class='btn btn-warning text-white' role='button'><i class='fas fa-edit'></i></a>"
+                        return retval;
+                    }
+                },
 {% for field in fields %}
 {% set isKey = false %}
 {% if associations.BelongsTo %}
@@ -118,6 +122,7 @@ $(document).ready(function(){
 {% set isKey = true %}
                 { 
                     "data" : null, 
+                    "name" : "{{ field }}",
                     "render": function ( data, type, row, meta ) {
                         if (data.{{ details.property }} == null) {
                             retval="";
@@ -132,27 +137,19 @@ $(document).ready(function(){
 {% endfor %}
 {% endif %}
 {% if isKey is not same as(true) %}
-                { "data" : "{{field}}" },
+                { "data" : "{{field}}", "name" : "{{field}}" },
 {% endif %}
 {% endfor %}
-                { 
-                    "data" : "id",
-                    "className" : "actions",
-                    "render": function ( data, type, row, meta ) {
-                        retval="<a href='{{ pluralVar|slug }}/view/"+data+"'>View</a>"
-                        retval+=" | <a href='{{ pluralVar|slug }}/edit/"+data+"'>Edit</a>"
-                        return retval;
-                    }
-                },
+
         ]
     });
     
     
     // Setup - add a text input to each header cell
-    var thead0 = $('.indexTable thead tr');
+    var thead0 = $('#{{ pluralVar }}Table thead tr');
     var thead1 = thead0.clone();
     thead1.insertAfter(thead0);
-    $('.indexTable thead tr:eq(1) th').each( function () {
+    $('#{{ pluralVar }}Table thead tr:eq(1) th').each( function () {
         var title = $(this).text();
         $(this).removeClass('sorting');
         $(this).width('0');
@@ -165,7 +162,7 @@ $(document).ready(function(){
         var searchWaitInterval;
         var searchWait = 0;
         var that = this;
-        var input = $( '.indexTable thead tr:eq(1) th:eq(' + index + ') input');
+        var input = $( '#{{ pluralVar }}Table thead tr:eq(1) th:eq(' + index + ') input');
         // wait for user to stop typing
         input.unbind('keypress keyup').bind('keypress keyup', function(e){
             var item = this;

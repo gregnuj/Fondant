@@ -14,65 +14,53 @@
  */
 #}
 {% set fields = Bake.filterFields(fields, schema, modelObject) %}
-<nav class="large-3 medium-4 columns" id="actions-sidebar">
-    <ul class="side-nav">
-        <li class="heading"><?= __('Actions') ?></li>
-{% if strpos(action, 'add') is same as(false) %}
-        <li><?= $this->Form->postLink(
-                __('Delete'),
-                ['action' => 'delete', ${{ singularVar }}->{{ primaryKey[0] }}],
-                ['confirm' => __('Are you sure you want to delete # {0}?', ${{ singularVar }}->{{ primaryKey[0] }})]
-            )
-        ?></li>
-{% endif %}
-        <li><?= $this->Html->link(__('List {{ pluralHumanName }}'), ['action' => 'index']) ?></li>
-        {{- "\n" }}
-{%- set done = [] %}
-{% for type, data in associations %}
-    {%- for alias, details in data %}
-        {%- if details.controller is not same as(_view.name) and details.controller not in done %}
-        <li><?= $this->Html->link(__('List {{ alias|underscore|humanize }}'), ['controller' => '{{ details.controller }}', 'action' => 'index']) ?></li>
-        <li><?= $this->Html->link(__('New {{ alias|singularize|underscore|humanize }}'), ['controller' => '{{ details.controller }}', 'action' => 'add']) ?></li>
-        {{- "\n" }}
-        {%- set done = done|merge([details.controller]) %}
-        {%- endif %}
-    {%- endfor %}
-{% endfor %}
-    </ul>
-</nav>
+{% set associations = {'BelongsTo': [], 'HasOne': [], 'HasMany': [], 'BelongsToMany': []}|merge(associations) %}
+{% set fieldsData = Bake.getViewFieldsData(fields, schema, associations) %}
+{% set associationFields = fieldsData.associationFields %}
+
 <div class="{{ pluralVar }} form large-9 medium-8 columns content">
-    <?= $this->Form->create(${{ singularVar }}) ?>
+    <?= $this->Form->create(isset(${{ singularVar }}) ? ${{ singularVar }} : '{{ singularVar }}') ?>
     <fieldset>
         <legend><?= __('{{ action|humanize }} {{ singularHumanName }}') ?></legend>
         <?php
 {% for field in fields if field not in primaryKey %}
+
+
     {%- if keyFields[field] %}
         {%- set fieldData = Bake.columnData(field, schema) %}
-        {%- if fieldData.null %}
-            echo $this->Form->control('{{ field }}', ['options' => ${{ keyFields[field] }}, 'empty' => true]);
-            {{- "\n" }}
-        {%- else %}
-            echo $this->Form->control('{{ field }}', ['options' => ${{ keyFields[field] }}]);
-            {{- "\n" }}
-        {%- endif %}
-    {%- elseif field not in ['created', 'modified', 'updated'] %}
+        {%- set details = associationFields[field] %}
+        if (isset(${{ singularVar }}->{{ details.property }}->{{ details.displayField }})): 
+            ${{ keyFields[field] }} = [ ${{ singularVar }}->{{ details.property }}->{{ details.primaryKey[0] }} => ${{ singularVar }}->{{ details.property }}->{{ details.displayField }} ];
+        else:
+            ${{ keyFields[field] }} = [];
+        endif;
+        echo $this->Form->control('{{ field }}', [
+            'label' => '{{ details.property|humanize }}', 
+            'options' => ${{ keyFields[field] }},
+            'data-ajax-url' => $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'select2', '_ext' => 'json']),
+            'data-id' => isset(${{ singularVar }}->{{ details.property }}->{{ details.primaryKey[0] }}) ? ${{ singularVar }}->{{ details.property }}->{{ details.displayField }} : '',
+            'data-text' => isset(${{ singularVar }}->{{ details.property }}->{{ details.displayField }}) ? ${{ singularVar }}->{{ details.property }}->{{ details.displayField }} : '',
+            'class' => 'form-control form-control-sm aero-auto-complete',
+        ]);
+        {{- "\n" }}
+
+    {%- elseif field not in ['created', 'modified', 'updated', 'created_user', 'modified_user'] %}
         {%- set fieldData = Bake.columnData(field, schema) %}
+
         {%- if fieldData.type in ['date', 'datetime', 'time'] and fieldData.null %}
-            echo $this->Form->control('{{ field }}', ['empty' => true]);
+            echo $this->Form->control('{{ field }}', ['class' => 'form-control form-control-sm', 'empty' => true]);
             {{- "\n" }}
+
+        {%- elseif fieldData.type in ['boolean'] %}
+            echo $this->Form->control('{{ field }}', ['type' => 'checkbox']);
+        {%- elseif fieldData.type in ['integer, mediauminteger, smallinteger'] %}
+            echo $this->Form->control('{{ field }}', ['class' => 'form-control', 'type' => 'number', 'value' => isset(${{ singularVar }}->field) ? ${{ singularVar }}->field : 0 ]);
         {%- else %}
-            echo $this->Form->control('{{ field }}');
+            echo $this->Form->control('{{ field }}', ['class' => 'form-control form-control-sm']);
     {{- "\n" }}
         {%- endif %}
     {%- endif %}
 {%- endfor %}
-
-{%- if associations.BelongsToMany %}
-    {%- for assocName, assocData in associations.BelongsToMany %}
-            echo $this->Form->control('{{ assocData.property }}._ids', ['options' => ${{ assocData.variable }}]);
-    {{- "\n" }}
-    {%- endfor %}
-{% endif %}
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>
