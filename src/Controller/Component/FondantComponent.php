@@ -306,21 +306,29 @@ class FondantComponent extends Component
         $model = $controller->name;
         $modelObj = $controller->{$model};
         $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        $types = $this->_getAssociationTypes();
+        $depth = $this->_getAssociationDepth();
+        $assocs = $this->_getAssociations($modelObj, $types, $depth);
         if ($controller->request->{$getMethod}('contain')){
-            $contain = (array)$controller->request->{$getMethod}('contain');
+            $requested = (array)$controller->request->{$getMethod}('contain');
         }else if ($controller->request->{$getMethod}('fields')){
             $gotFields = (array)$controller->request->{$getMethod}('fields');
-            $contain = [];
+            $requested = [];
             foreach ($gotFields as $field){
                 $oparts = explode('.', $field);
                 $cparts = array_slice($oparts, 0, -1);
-                $contain[] = implode('.', $cparts);
+                $requested[] = implode('.', $cparts);
             }
-        }else{
-            $types = $this->_getAssociationTypes();
-            $depth = $this->_getAssociationDepth();
-            $contain = $this->_getAssociations($modelObj, $types, $depth);
-        }
+	}else{
+		$requested = $assocs;
+	}
+	// Only include valid contains
+	$contain = [];
+	foreach ($requested as $r){
+		if (in_array($r, $assocs)){
+			$contain[] = $r;
+		}
+	}
         return $contain;
     }
 
