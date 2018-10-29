@@ -62,6 +62,9 @@ class {{ name }}Controller extends AppController
         $this->JqueryUi->select2();
     }
 
+    public function get_associations(){
+        $this->Fondant->getAssociations();
+    }
 
 {%- for action in actions %}
     {%- element 'Controller/' ~ action %}

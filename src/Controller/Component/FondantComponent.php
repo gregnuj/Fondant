@@ -115,7 +115,7 @@ class FondantComponent extends Component
                 ->limit($length)
                 ->page($page)
             ;
-            $this->log($query->sql());
+            //$this->log($query->sql());
             $controller->set(compact('draw', 'length', 'page', 'recordsTotal', 'recordsFiltered'));
             $controller->set($variableName, $query);
             $controller->set('_serialize', [ 'draw', 'length', 'page', 'recordsTotal', 'recordsFiltered', $variableName ]);
@@ -441,7 +441,7 @@ class FondantComponent extends Component
                 }
             }
         }
-        $this->log(serialize($conditions));
+        //$this->log(serialize($conditions));
         return $conditions;
     }
 
