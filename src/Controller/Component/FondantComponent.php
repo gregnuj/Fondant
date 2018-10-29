@@ -325,7 +325,8 @@ class FondantComponent extends Component
 	// Only include valid contains
 	$contain = [];
 	foreach ($requested as $r){
-		if (in_array($r, $assocs)){
+	    $s = explode('.', $r);
+		if (in_array($s[0], $assocs)){
 			$contain[] = $r;
 		}
 	}
