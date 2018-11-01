@@ -496,8 +496,8 @@ class FondantComponent extends Component
         if ($order = $controller->request->{$getMethod}('order')){
             if ($columns = $controller->request->{$getMethod}('columns')){
                 foreach ($order as $ord){
-                    if (!empty($columns[$ord['column']]['data'])){
-                        $results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
+                    if (!empty($columns[$ord['column']]['name'])){
+                        $results[] = "{$model}.{$columns[$ord['column']]['name']} {$ord['dir']}";
                     }
                 }
             }
