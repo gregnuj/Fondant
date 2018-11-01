@@ -456,7 +456,7 @@ class FondantComponent extends Component
         if ($controller->request->{$getMethod}('conditions')){
             $conditions = (array)$controller->request->query['conditions'];
         }
-        if ($match = $controller->request->${getMethod}('match')){
+        if ($match = $controller->request->{$getMethod}('match')){
             $conditions[] = "$controller->{$model} regexp '{$match}'";
         }
         $filter = $controller->request->{$getMethod}('filter');
