@@ -89,6 +89,7 @@ class FondantComponent extends Component
             $controller = $this->_registry->getController();
             $model = $controller->name;
             $variableName = $this->_variableName($controller->name);
+            $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
             
             # Filter conditions are processed first
             
@@ -107,7 +108,7 @@ class FondantComponent extends Component
             $recordsFiltered = $query->count();
             
             # get length and page
-            $draw = $controller->request->getQuery('draw');
+            $draw = $controller->request->{$getMethod}('draw');
             $page = $this->_getPage();
             $length = $this->_getLimit();
             $query = $query    
@@ -133,7 +134,8 @@ class FondantComponent extends Component
     {
         $entity = $this->_findEntity($param);
         $controller = $this->_registry->getController();
-        if ($controller->request->getQuery('flatten') > 0){
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($controller->request->{$getMethod}('flatten') > 0){
            $entity = Hash::flatten($entity->toArray());
         }
         $singularName = $this->_singularName($controller->name);
@@ -450,13 +452,14 @@ class FondantComponent extends Component
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $conditions = [];
-        if ($controller->request->getQuery('conditions')){
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($controller->request->{$getMethod}('conditions')){
             $conditions = (array)$controller->request->query['conditions'];
         }
-        if ($match = $controller->request->query('match')){
+        if ($match = $controller->request->${getMethod}('match')){
             $conditions[] = "$controller->{$model} regexp '{$match}'";
         }
-        $filter = $controller->request->getQuery('filter');
+        $filter = $controller->request->{$getMethod}('filter');
         if (!empty($filter['form_action'])){
              $controller->redirect(['action' => 'index', '?' => []]);
         }else if (isset($filter['type']) && isset($filter['field']) && isset($filter['value'])){
@@ -506,9 +509,10 @@ class FondantComponent extends Component
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $results = 500;
-        if ($length = $controller->request->getQuery('length')){
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($length = $controller->request->{$getMethod}('length')){
             $results = $length;
-        }elseif ($limit = $controller->request->getQuery('limit')){
+        }elseif ($limit = $controller->request->{$getMethod}('limit')){
             $results = $limit;  
         }
         return $results;
@@ -517,8 +521,9 @@ class FondantComponent extends Component
     protected function _getPage(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
         $results = 1;
-        $start = $controller->request->getQuery('start') ? $controller->request->getQuery('start') : 0;
+        $start = $controller->request->{$getMethod}('start') ? $controller->request->{$getMethod}('start') : 0;
         $limit = $this->_getLimit();
         $results = ($start + $limit)/$limit;  
         return $results;
