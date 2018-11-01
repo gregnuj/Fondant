@@ -420,7 +420,8 @@ class FondantComponent extends Component
         $model = $controller->name;
         $associations = $controller->{$model}->associations();
         $conditions = [];
-        if ($columns = $controller->request->getQuery('columns')){
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($columns = $controller->request->{$getMethod}('columns')){
             foreach ($columns as $column){
                 $table = false;
                 if ($column['search']['value'] != false){
@@ -488,8 +489,9 @@ class FondantComponent extends Component
         $controller = $this->_registry->getController();
         $model = $controller->name;
         $results = [];
-        if ($order = $controller->request->getQuery('order')){
-            if ($columns = $controller->request->getQuery('columns')){
+        $getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+        if ($order = $controller->request->{$getMethod}('order')){
+            if ($columns = $controller->request->{$getMethod}('columns')){
                 foreach ($order as $ord){
                     if (!empty($columns[$ord['column']]['data'])){
                         $results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";

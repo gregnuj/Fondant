@@ -96,6 +96,7 @@ $(document).ready(function(){
             "processing": "Loading. Please wait..."
         },
         "ajax": {
+            "type": "POST",
             "url": "<?= $this->Url->build(['action' => 'index']); ?>",
             "dataSrc": "{{pluralVar}}",
             "data" : { 
@@ -105,7 +106,8 @@ $(document).ready(function(){
         "columns": [
                 { 
                     "data" : "{{ primaryKey[0] }}",
-                    "name" : "{{ primaryKey[0] }}",
+                    "name" : "actions",
+                    "searchable": false,
                     "className" : "actions",
                     "render": function ( data, type, row, meta ) {
                         retval=""

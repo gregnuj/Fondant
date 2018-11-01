@@ -110,6 +110,7 @@
             <tr>
                 <th style="min-width: 100px" scope="col" class="actions"><?= __('Actions') ?></th>
 {% for field in details.fields %}
+<!-- {{ otherPk }}  -->
 {% set isKey = false %}
 {% if field ends with '_id' %}
 {% set isKey = true %}
