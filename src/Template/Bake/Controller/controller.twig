@@ -66,6 +66,10 @@ class {{ name }}Controller extends AppController
         $this->Fondant->getAssociations();
     }
 
+    public function getAssociatedDetails(){
+        $this->Fondant->getAssociatedDetails();
+    }
+
 {%- for action in actions %}
     {%- element 'Controller/' ~ action %}
 {% endfor %}

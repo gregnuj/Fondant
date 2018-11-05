@@ -39,6 +39,7 @@ class FondantComponent extends Component
     
     public function beforeFilter(Event $event){
         $this->_setSearchVars();
+        $this->_setAssociationList();
     }
     
     public function getAssociations(){
@@ -66,8 +67,8 @@ class FondantComponent extends Component
             $association[$alias] = [
                 'property' => $assoc->property(),
                 'variable' => Inflector::variable($assoc->getName()),
-                'primaryKey' => (array)$target->primaryKey(),
-                'displayField' => $target->displayField(),
+                'primaryKey' => (array)$target->getPrimaryKey(),
+                'displayField' => $target->getDisplayField(),
                 'foreignKey' => $assoc->foreignKey(),
                 'alias' => $assoc->getAlias(),
                 'controller' => $assoc->getName(), //good enough?
@@ -162,7 +163,7 @@ class FondantComponent extends Component
             $entity = $controller->{$model}->patchEntity($entity, $controller->request->data);
             if ($controller->{$model}->save($entity)) {
                 $controller->Flash->success(__("The {$singularName} has been saved."));
-                return $controller->redirect(["action" => "view", $entity->{$controller->{$model}->displayField()}]);
+                return $controller->redirect(["action" => "view", $entity->{$controller->{$model}->getPrimaryKey()}]);
             } else {
                 $controller->log($entity->errors());
                 $controller->Flash->error(__("The modified {$singularName} could not be saved. Please, try again."));
@@ -187,7 +188,7 @@ class FondantComponent extends Component
             $entity = $controller->{$model}->patchEntity($entity, $controller->request->data);
             if ($controller->{$model}->save($entity)) {
                 $controller->Flash->success(__("The {$singularName} has been saved."));
-                return $controller->redirect(["action" => "view", $entity->{$controller->{$model}->displayField()}]);
+                return $controller->redirect(["action" => "view", $entity->{$controller->{$model}->getPrimaryKey()}]);
             } else {
                 $controller->log($entity->errors());
                 $controller->Flash->error(__("The new {$singularName} could not be saved. Please, try again."));
@@ -220,7 +221,7 @@ class FondantComponent extends Component
     protected function _setSearchVars(){
         $controller = $this->_registry->getController();
         $model = $controller->name;
-        $displayField = $controller->{$model}->displayField();
+        $displayField = $controller->{$model}->getDisplayField();
         $fields = $controller->{$model}->schema()->columns();
         $fieldNames = [];
         foreach($fields as $i => $field){
@@ -397,7 +398,7 @@ class FondantComponent extends Component
     protected function _findById($id){
         $controller = $this->_registry->getController();
         $model = $controller->name;
-        $primaryKey = (array)$controller->{$model}->primaryKey();
+        $primaryKey = (array)$controller->{$model}->getPrimaryKey();
         return $controller->{$model}->find()
             ->select($this->_getFields())
             ->contain($this->_getContain())
@@ -409,7 +410,7 @@ class FondantComponent extends Component
     {
         $controller = $this->_registry->getController();
         $model = $controller->name;
-        $displayField = $controller->{$model}->displayField();
+        $displayField = $controller->{$model}->getDisplayField();
         return $controller->{$model}->find()
             ->select($this->_getFields())
             ->contain($this->_getContain())
@@ -431,7 +432,7 @@ class FondantComponent extends Component
                         $fk = $association->getForeignKey();
                         if ($column['name'] == $fk){
                             $table = $association->getName();
-                            $searchField = $association->displayField();
+                            $searchField = $association->getDisplayField();
                             break;
                         }
                     }
@@ -467,7 +468,7 @@ class FondantComponent extends Component
             $table = $controller->name;
             if (substr($filter['field'], -3) == '_id'){
                 $table = $this->_modelNameFromKey($filter['field']);
-                $filter['field'] = $controller->{$model}->{$table}->displayField();
+                $filter['field'] = $controller->{$model}->{$table}->getDisplayField();
             }
             switch ($filter['type']) {
                 case 'starts with':
