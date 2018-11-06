@@ -502,7 +502,11 @@ class FondantComponent extends Component
                     }
                 }
             }
-        }
+	}
+	if (empty($results)){
+	    $displayField = $controller->{$model}->getDisplayField();
+            $results[] = "{$model}.{$controller->{$model}->getDisplayField()} DESC";
+    	}
         return $results;
     }
     
