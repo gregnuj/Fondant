@@ -505,7 +505,7 @@ class FondantComponent extends Component
 	}
 	if (empty($results)){
 	    $displayField = $controller->{$model}->getDisplayField();
-            $results[] = "{$model}.{$controller->{$model}->getDisplayField()} DESC";
+            $results[] = "{$model}.{$controller->{$model}->getDisplayField()} ASC";
     	}
         return $results;
     }
