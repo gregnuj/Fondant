@@ -24,20 +24,21 @@
 
 <div class="{{ pluralVar }} index large-9 medium-8 columns content">
     <!-- <h3><?= __('{{ pluralHumanName }}') ?></h3> -->
-    <table id="{{ pluralVar }}Table" class="dataTable table table-striped table-sm" style="width: 95vw" cellpadding="0" cellspacing="0">
+    <table id="{{ pluralVar }}Table" class="dataTable table table-striped table-sm dt-responsive" style="width: 95vw" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th style="min-width: 100px" scope="col" class="actions"><?= __('Actions') ?></th>
+                <th class="rspv notsearchable" scope="col" style="min-width: 25px" ></th>
+                <th class="actions notsearchable" scope="col" style="min-width: 75px" ><?= __('Actions') ?></th>
 {% for field in fields %}
 {% set isKey = false %}
 {% if associations.BelongsTo %}
 {% for alias, details in associations.BelongsTo if field == details.foreignKey %}
 {% set isKey = true %}
-                <th style="min-width: 75px" scope="col"><?= "{{ details.property|camelize }}" ?></th>
+                <th class="searchable" scope="col" style="min-width: 75px" ><?= "{{ details.property|camelize }}" ?></th>
 {% endfor %}
 {% endif %}
 {% if isKey is not same as(true) %}
-                <th style="min-width: 75px" scope="col"><?= "{{ field|camelize }}" ?></th>
+                <th class="searchable" scope="col" style="min-width: 75px" ><?= "{{ field|camelize }}" ?></th>
 {% endif %}
 {% endfor %}
             </tr>
@@ -69,16 +70,17 @@ $(document).ready(function(){
                 }
             }
         ],
+        "lengthMenu": [[50, 100, 250, 500, 1000, 5000], [50, 100, 250, 500, 1000, "Max"]],
+        "order": [[ 3, 'asc' ]],
         "paging" : true, 
         "filter" : true,
         "orderCellsTop" : true,
         "fixedHeader" : true,
         "processing": true,
         "serverSide": true,
-        "lengthMenu": [[50, 100, 250, 500, 1000, 5000], [50, 100, 250, 500, 1000, "Max"]],
-        "responsive":  responsive,
+        "responsive": true,
         "searchDelay": 750,
-        //"autoWidth" : false,
+        "autoWidth" : true,
         /*
         {
             "details": {
@@ -104,10 +106,20 @@ $(document).ready(function(){
             },
         },
         "columns": [
+                {
+                    "data" : null, 
+                    "name" : 'responsive',
+                    "searchable": false,
+                    "orderable": false,
+                    "render": function ( data, type, row, meta ) {
+                        return "";
+                    }
+                },
                 { 
                     "data" : "{{ primaryKey[0] }}",
                     "name" : "actions",
                     "searchable": false,
+                    "orderable": false,
                     "className" : "actions",
                     "render": function ( data, type, row, meta ) {
                         retval=""
@@ -155,7 +167,11 @@ $(document).ready(function(){
         var title = $(this).text();
         $(this).removeClass('sorting');
         $(this).width('0');
-        $(this).html( '<input type="text" style="width:100%" placeholder="'+title+'" />' );
+        if ($(this).hasClass('notsearchable')){
+            $(this).html('');
+        } else {
+            $(this).html( '<input type="text" style="width:100%" placeholder="'+title+'" />' );
+        }
         //$(this).html( '<input type="text" style="width:100%" placeholder="" />' );
     } );
  
@@ -176,6 +192,7 @@ $(document).ready(function(){
                     if ( that.search() !== item.value ) {
                         that
                             .search( item.value )
+                            .adjust()
                             .draw();
                     }
                     searchWait = 0;
@@ -195,7 +212,6 @@ $(document).ready(function(){
         });
     });
     
-    $('.paginate_button').css({'padding' : '0.5em 0'});
 });
 
 </script>

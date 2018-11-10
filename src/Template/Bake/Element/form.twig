@@ -54,7 +54,7 @@
         {%- elseif fieldData.type in ['boolean'] %}
             echo $this->Form->control('{{ field }}', ['type' => 'checkbox']);
         {%- elseif fieldData.type in ['integer, mediauminteger, smallinteger'] %}
-            echo $this->Form->control('{{ field }}', ['class' => 'form-control', 'type' => 'number', 'value' => isset(${{ singularVar }}->field) ? ${{ singularVar }}->field : 0 ]);
+            echo $this->Form->control('{{ field }}', ['class' => 'form-control form-control-sm', 'type' => 'number', 'value' => isset(${{ singularVar }}->field) ? ${{ singularVar }}->field : 0 ]);
         {%- else %}
             echo $this->Form->control('{{ field }}', ['class' => 'form-control form-control-sm']);
     {{- "\n" }}
@@ -63,6 +63,6 @@
 {%- endfor %}
         ?>
     </fieldset>
-    <?= $this->Form->button(__('Submit')) ?>
+    <?= $this->Form->button(__('Submit'), ['class' => 'btn btn-sm btn-primary']) ?>
     <?= $this->Form->end() ?>
 </div>

@@ -35,6 +35,8 @@ class FondantComponent extends Component
     public function initialize(array $config)
     {
         parent::initialize($config);
+        $controller = $this->_registry->getController();
+        $controller->loadComponent('RequestHandler');
     }
     
     public function beforeFilter(Event $event){
@@ -85,8 +87,8 @@ class FondantComponent extends Component
      */
     public function index($param = null)
     {
-        
         if ($this->request->is('ajax') || $this->request->is('json')  ){
+
             $controller = $this->_registry->getController();
             $model = $controller->name;
             $variableName = $this->_variableName($controller->name);
@@ -497,14 +499,16 @@ class FondantComponent extends Component
         if ($order = $controller->request->{$getMethod}('order')){
             if ($columns = $controller->request->{$getMethod}('columns')){
                 foreach ($order as $ord){
-                    if (!empty($columns[$ord['column']]['data'])){
-                        $results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
+                    if ($columns[$ord['column']]['orderable'] == 'true'){
+                        if (!empty($columns[$ord['column']]['data'])){
+                            $results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
+                        }
                     }
                 }
             }
-	}
-	if (empty($results)){
-	    $displayField = $controller->{$model}->getDisplayField();
+	    }
+	    if (empty($results)){
+	        $displayField = $controller->{$model}->getDisplayField();
             $results[] = "{$model}.{$controller->{$model}->getDisplayField()} DESC";
     	}
         return $results;

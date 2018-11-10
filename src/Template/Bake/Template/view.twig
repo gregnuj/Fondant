@@ -44,12 +44,20 @@
 {% set details = associationFields[field] %}
         <tr>
             <th scope="row"><?= __('{{ details.property|humanize }}') ?></th>
-            <td><?= ${{ singularVar }}->has('{{ details.property }}') ? $this->Html->link(${{ singularVar }}->{{ details.property }}->{{ details.displayField }}, ['controller' => '{{ details.controller }}', 'action' => 'view', ${{ singularVar }}->{{ details.property }}->{{ details.primaryKey[0] }}]) : '' ?></td>
+            <td><?= ${{ singularVar }}->{{ details.property }}->{{ details.displayField }} ?>
+            <td><?= ${{ singularVar }}->has('{{ details.property }}') ? $this->Html->link(
+                "<i class='fas fa-arrow-right'></i>", 
+                [
+                    'controller' => '{{ details.controller }}', 
+                    'action' => 'view', ${{ singularVar }}->{{ details.property }}->{{ details.primaryKey[0] }},
+                ], ['escape' => false, 'class' =>'btn btn-success text-white']) : '' ?>
+            </td>
         </tr>
 {% else %}
         <tr>
             <th scope="row"><?= __('{{ field|humanize }}') ?></th>
             <td><?= h(${{ singularVar }}->{{ field }}) ?></td>
+            <td></td>
         </tr>
 {% endif %}
 {% endfor %}
@@ -58,7 +66,13 @@
 {% for alias, details in associations.HasOne %}
         <tr>
             <th scope="row"><?= __('{{ alias|underscore|singularize|humanize }}') ?></th>
-            <td><?= ${{ singularVar }}->has('{{ details.property }}') ? $this->Html->link(${{ singularVar }}->{{ details.property }}->{{ details.displayField }}, ['controller' => '{{ details.controller }}', 'action' => 'view', ${{ singularVar }}->{{ details.property }}->{{ details.primaryKey[0] }}]) : '' ?></td>
+            <td><?= ${{ singularVar }}->has('{{ details.property }}') ? $this->Html->link(
+                "<i class='fas fa-arrow-right'></i>", 
+                [
+                    'controller' => '{{ details.controller }}', 
+                    'action' => 'view', ${{ singularVar }}->{{ details.property }}->{{ details.primaryKey[0] }},
+                ], ['escape' => false, 'class' =>'btn btn-success text-white']) : '' ?>
+            </td>
         </tr>
 {% endfor %}
 {% endif %}
@@ -67,6 +81,7 @@
         <tr>
             <th scope="row"><?= __('{{ field|humanize }}') ?></th>
             <td><?= $this->Number->format(${{ singularVar }}->{{ field }}) ?></td>
+            <td></td>
         </tr>
 {% endfor %}
 {% endif %}
@@ -75,6 +90,7 @@
         <tr>
             <th scope="row"><?= __('{{ field|humanize }}') ?></th>
             <td><?= h(${{ singularVar }}->{{ field }}) ?></td>
+            <td></td>
         </tr>
 {% endfor %}
 {% endif %}
@@ -83,6 +99,7 @@
         <tr>
             <th scope="row"><?= __('{{ field|humanize }}') ?></th>
             <td><?= ${{ singularVar }}->{{ field }} ? __('Yes') : __('No'); ?></td>
+            <td></td>
         </tr>
 {% endfor %}
 {% endif %}
@@ -108,6 +125,7 @@
         <table id="{{ otherPluralVar }}Table" class="dataTable table table-striped table-sm" style="width: 95vw" cellpadding="0" cellspacing="0">
             <thead>
             <tr>
+                <th class="th-responsive"></th>
                 <th style="min-width: 100px" scope="col" class="actions"><?= __('Actions') ?></th>
 {% for field in details.fields %}
 <!-- {{ otherPk }}  -->
@@ -159,7 +177,11 @@ $(document).ready(function(){
         "processing": true,
         "serverSide": true,
         "lengthMenu": [[10, 50, 100, 250, 500, 1000, 5000], [10, 50, 100, 250, 500, 1000, "Max"]],
-        "responsive":  responsive,
+        "responsive": {
+            "details": {
+                "type": 'column'
+            }
+        },
         "searchDelay": 750,
         //"autoWidth" : false,
         /*
@@ -186,6 +208,7 @@ $(document).ready(function(){
             "dataSrc": "{{otherPluralVar}}"
         },
         "columns": [
+                {"data" : false, "name" : 'responsive'},
                 { 
                     "data" : "{{ details.primaryKey[0] }}",
                     "name" : "{{ details.primaryKey[0] }}",
