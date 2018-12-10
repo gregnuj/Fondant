@@ -122,21 +122,21 @@
     <div class="related">
         <?php if (!empty(${{ singularVar }}->{{ details.property }})): ?>
         <h4><?= __('Related {{ otherPluralHumanName }}') ?></h4>
-        <table id="{{ otherPluralVar }}Table" class="dataTable table table-striped table-sm" style="width: 95vw" cellpadding="0" cellspacing="0">
+        <table id="{{ otherPluralVar }}Table" class="dataTable table table-striped table-sm dt-responsive" style="width: 95vw" cellpadding="0" cellspacing="0">
             <thead>
             <tr>
-                <th class="th-responsive"></th>
-                <th style="min-width: 100px" scope="col" class="actions"><?= __('Actions') ?></th>
+                <th class="rspv notsearchable" scope="col" style="min-width: 25px" ></th>
+                <th class="actions notsearchable" scope="col" style="min-width: 70px" ><?= __('Actions') ?></th>
 {% for field in details.fields %}
 <!-- {{ otherPk }}  -->
 {% set isKey = false %}
 {% if field ends with '_id' %}
 {% set isKey = true %}
 {% set property = field[0:-3] %}
-                <th style="min-width: 75px" scope="col"><?= __('{{ property|camelize }}') ?></th>
+                <th class="searchable" style="min-width: 100px" scope="col"><?= __('{{ property|camelize }}') ?></th>
 {% endif %}
 {% if isKey is not same as(true) %}
-                <th style="min-width: 75px" scope="col"><?= __('{{ field|camelize }}') ?></th>
+                <th class="searchable" style="min-width: 100px" scope="col"><?= __('{{ field|camelize }}') ?></th>
 {% endif %}
 {% endfor %}
             </tr>
@@ -170,20 +170,21 @@ $(document).ready(function(){
                 }
             }
         ],
+        "lengthMenu": [[50, 100, 250, 500, 1000, 5000], [50, 100, 250, 500, 1000, "Max"]],
+        "order": [[ 3, 'asc' ]],
         "paging" : true, 
         "filter" : true,
         "orderCellsTop" : true,
         "fixedHeader" : true,
         "processing": true,
         "serverSide": true,
-        "lengthMenu": [[10, 50, 100, 250, 500, 1000, 5000], [10, 50, 100, 250, 500, 1000, "Max"]],
         "responsive": {
-            "details": {
-                "type": 'column'
+            details: {
+                type: 'column'
             }
         },
         "searchDelay": 750,
-        //"autoWidth" : false,
+        "autoWidth" : true,
         /*
         {
             "details": {
@@ -208,7 +209,16 @@ $(document).ready(function(){
             "dataSrc": "{{otherPluralVar}}"
         },
         "columns": [
-                {"data" : false, "name" : 'responsive'},
+                {
+                    "data" : null, 
+                    "name" : 'responsive',
+                    "searchable": false,
+                    "orderable": false,
+                    "className": 'control',
+                    "render": function ( data, type, row, meta ) {
+                        return "";
+                    }
+                },
                 { 
                     "data" : "{{ details.primaryKey[0] }}",
                     "name" : "{{ details.primaryKey[0] }}",
@@ -263,7 +273,11 @@ $(document).ready(function(){
         var title = $(this).text();
         $(this).removeClass('sorting');
         $(this).width('0');
-        $(this).html( '<input type="text" style="width:100%" placeholder="'+title+'" />' );
+        if ($(this).hasClass('notsearchable')){
+            $(this).html('');
+        } else {
+            $(this).html( '<input type="text" style="width:100%" placeholder="'+title+'" />' );
+        }
         //$(this).html( '<input type="text" style="width:100%" placeholder="" />' );
     } );
  
