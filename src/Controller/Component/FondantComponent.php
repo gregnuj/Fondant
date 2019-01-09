@@ -514,7 +514,9 @@ class FondantComponent extends Component
 				foreach ($order as $ord){
 					if ($columns[$ord['column']]['orderable'] == 'true'){
 						if ($columns[$ord['column']]['data'] != 'false'){
-							$results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
+							if (!empty($columns[$ord['column']]['data'])){
+								$results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
+							}
 						}
 					}
 				}
@@ -522,7 +524,7 @@ class FondantComponent extends Component
 		}
 		if (empty($results)){
 			$displayField = $controller->{$model}->getDisplayField();
-			$results[] = "{$model}.{$controller->{$model}->getDisplayField()} DESC";
+			$results[] = "{$model}.{$controller->{$model}->getDisplayField()} ASC";
 		}
 		return $results;
 	}
