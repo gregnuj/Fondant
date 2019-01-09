@@ -112,6 +112,7 @@
     </div>
 {% endfor %}
 {% endif %}
+
 {% set relations = associations.BelongsToMany|merge(associations.HasMany) %}
 {% for alias, details in relations %}
 {% set otherSingularVar = alias|variable %}
@@ -153,6 +154,7 @@
 <script>
 var responsive = true;
 $(document).ready(function(){
+    $.fn.dataTable.ext.errMode = 'throw';
     //{{ otherPluralVar }}Assoc = $.getJSON("<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'get-associated-details.json']); ?>");
     
     table = $('#{{ otherPluralVar }}Table').DataTable({
@@ -201,6 +203,7 @@ $(document).ready(function(){
             "processing": "Loading. Please wait..."
         },
         "ajax": {
+	    "type": 'POST',
             "url": "<?= $this->Url->build(['controller' => '{{ details.controller }}', 'action' => 'index']); ?>",
             "data": {
                 'conditions' : "{{ details.controller }}.{{ details.foreignKey }} = '<?= {{ pK|raw }} ?>'"

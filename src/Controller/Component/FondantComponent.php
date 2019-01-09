@@ -38,6 +38,17 @@ class FondantComponent extends Component
 		$controller = $this->_registry->getController();
 		$controller->loadComponent('RequestHandler');
 	}
+	
+	protected function getModelName(){
+		$controller = $this->_registry->getController();
+		if (!empty($controller->primaryModel)){
+			$table = $controller->primaryModel;
+			list($plugin, $model) = pluginSplit($table);
+		}else{
+			$model = $controller->name;
+		}
+		return $model;
+	}
 
 	public function beforeFilter(Event $event){
 		$this->_setSearchVars();
@@ -46,7 +57,7 @@ class FondantComponent extends Component
 
 	public function getAssociations(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$modelObj = $controller->{$model};
 		$types = $this->_getAssociationTypes();
 		$depth = $this->_getAssociationDepth();
@@ -57,7 +68,7 @@ class FondantComponent extends Component
 
 	public function getAssociatedDetails(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$modelObj = $controller->{$model};
 		$associations = $this->_getAssociations($modelObj, ['BelongsTo'], 1);
 		foreach($associations as &$association){
@@ -90,7 +101,7 @@ class FondantComponent extends Component
 		if ($this->request->is('ajax') || $this->request->is('json')  ){
 
 			$controller = $this->_registry->getController();
-			$model = $controller->name;
+			$model = $this->getModelName();
 			$variableName = $this->_variableName($controller->name);
 			$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 
@@ -158,7 +169,7 @@ class FondantComponent extends Component
 	public function edit($param = null)
 	{
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$entity = $this->_findEntity($param);
 		$singularName = $this->_singularName($controller->name);
 		if ($controller->request->is(['patch', 'post', 'put'])) {
@@ -183,7 +194,7 @@ class FondantComponent extends Component
 	public function add()
 	{
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$entity = $controller->{$model}->newEntity();
 		$singularName = $this->_singularName($controller->name);
 		if ($controller->request->is('post')) {
@@ -208,7 +219,7 @@ class FondantComponent extends Component
 	public function delete($param = null)
 	{
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$singularName = $this->_singularName($controller->name);
 		$controller->request->allowMethod(['post', 'delete']);
 		$entity = $this->_findEntity($param);
@@ -222,7 +233,7 @@ class FondantComponent extends Component
 
 	protected function _setSearchVars(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$displayField = $controller->{$model}->getDisplayField();
 		$fields = $controller->{$model}->schema()->columns();
 		$fieldNames = [];
@@ -300,7 +311,7 @@ class FondantComponent extends Component
 
 	protected function _setAssociationList($depth = 1){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$modelObj = $controller->{$model};
 		$types = $this->_getAssociationTypes();
 		$controller->set('association_list', $this->_getAssociations($modelObj, $types, $depth));
@@ -308,7 +319,7 @@ class FondantComponent extends Component
 
 	protected function _getContain(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$modelObj = $controller->{$model};
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		$types = $this->_getAssociationTypes();
@@ -340,7 +351,7 @@ class FondantComponent extends Component
 
 	protected function _getFields(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$modelObj = $controller->{$model};
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		if ($controller->request->{$getMethod}('fields')){
@@ -360,7 +371,7 @@ class FondantComponent extends Component
 
 	protected function _setHiddenColumns(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$action = $controller->request->action;
 		$hiddenColumns = [];
 		if (isset($controller->{$model}->hiddenColumns)){
@@ -373,7 +384,7 @@ class FondantComponent extends Component
 
 	protected function _find(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		return $controller->{$model}->find()
 		    ->select($this->_getFields())
 		    ->contain($this->_getContain())
@@ -399,7 +410,7 @@ class FondantComponent extends Component
 
 	protected function _findById($id){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$primaryKey = (array)$controller->{$model}->getPrimaryKey();
 		return $controller->{$model}->find()
 		    ->select($this->_getFields())
@@ -411,7 +422,7 @@ class FondantComponent extends Component
 	protected function _findByName($name)
 	{
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$displayField = $controller->{$model}->getDisplayField();
 		return $controller->{$model}->find()
 		    ->select($this->_getFields())
@@ -422,7 +433,7 @@ class FondantComponent extends Component
 
 	protected function _getSearchConditions(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$associations = $controller->{$model}->associations();
 		$conditions = [];
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
@@ -453,11 +464,11 @@ class FondantComponent extends Component
 
 	protected function _getFilterConditions(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$conditions = [];
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		if ($controller->request->{$getMethod}('conditions')){
-			$conditions = (array)$controller->request->query['conditions'];
+			$conditions = (array)$controller->request->{$getMethod}['conditions'];
 		}
 		if ($match = $controller->request->{$getMethod}('match')){
 			$conditions[] = "$controller->{$model} regexp '{$match}'";
@@ -493,14 +504,14 @@ class FondantComponent extends Component
 
 	protected function _getOrder(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$results = [];
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		if ($order = $controller->request->{$getMethod}('order')){
 			if ($columns = $controller->request->{$getMethod}('columns')){
 				foreach ($order as $ord){
 					if ($columns[$ord['column']]['orderable'] == 'true'){
-						if (!empty($columns[$ord['column']]['data'])){
+						if ($columns[$ord['column']]['data'] != 'false'){
 							$results[] = "{$model}.{$columns[$ord['column']]['data']} {$ord['dir']}";
 						}
 					}
@@ -516,7 +527,7 @@ class FondantComponent extends Component
 
 	protected function _getLimit(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$results = 500;
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		if ($length = $controller->request->{$getMethod}('length')){
@@ -529,7 +540,7 @@ class FondantComponent extends Component
 
 	protected function _getPage(){
 		$controller = $this->_registry->getController();
-		$model = $controller->name;
+		$model = $this->getModelName();
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		$results = 1;
 		$start = $controller->request->{$getMethod}('start') ? $controller->request->{$getMethod}('start') : 0;

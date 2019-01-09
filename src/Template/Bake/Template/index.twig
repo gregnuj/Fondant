@@ -54,6 +54,7 @@
 <script>
 var responsive = true;
 $(document).ready(function(){
+    $.fn.dataTable.ext.errMode = 'throw';
     
     table = $('#{{ pluralVar }}Table').DataTable({
         //"dom" : "Brtip",
@@ -103,7 +104,7 @@ $(document).ready(function(){
             "dataSrc": "{{pluralVar}}",
             "data" : { 
                 "filter" : <?= json_encode($this->request->getQuery('filter')) ?>,
-            },
+            }
         },
         "columns": [
                 {
@@ -192,7 +193,7 @@ $(document).ready(function(){
                     if ( that.search() !== item.value ) {
                         that
                             .search( item.value )
-                            .adjust()
+                            //.adjust()
                             .draw();
                     }
                     searchWait = 0;
