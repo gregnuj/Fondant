@@ -28,17 +28,17 @@
         <thead>
             <tr>
                 <th class="rspv notsearchable" scope="col" style="min-width: 25px" ></th>
-                <th class="actions notsearchable" scope="col" style="min-width: 75px" ><?= __('Actions') ?></th>
+                <th class="actions notsearchable" scope="col" style="min-width: 70px" ><?= __('Actions') ?></th>
 {% for field in fields %}
 {% set isKey = false %}
 {% if associations.BelongsTo %}
 {% for alias, details in associations.BelongsTo if field == details.foreignKey %}
 {% set isKey = true %}
-                <th class="searchable" scope="col" style="min-width: 75px" ><?= "{{ details.property|camelize }}" ?></th>
+                <th class="searchable" scope="col" style="min-width: 100px" ><?= "{{ details.property|camelize }}" ?></th>
 {% endfor %}
 {% endif %}
 {% if isKey is not same as(true) %}
-                <th class="searchable" scope="col" style="min-width: 75px" ><?= "{{ field|camelize }}" ?></th>
+                <th class="searchable" scope="col" style="min-width: 100px" ><?= "{{ field|camelize }}" ?></th>
 {% endif %}
 {% endfor %}
             </tr>
@@ -79,7 +79,11 @@ $(document).ready(function(){
         "fixedHeader" : true,
         "processing": true,
         "serverSide": true,
-        "responsive": true,
+        "responsive": {
+            details: {
+                type: 'column'
+            }
+        },
         "searchDelay": 750,
         "autoWidth" : true,
         /*
@@ -112,6 +116,7 @@ $(document).ready(function(){
                     "name" : 'responsive',
                     "searchable": false,
                     "orderable": false,
+                    "className": 'control',
                     "render": function ( data, type, row, meta ) {
                         return "";
                     }
@@ -191,10 +196,7 @@ $(document).ready(function(){
                     clearInterval(searchWaitInterval);
                     searchWaitInterval = '';
                     if ( that.search() !== item.value ) {
-                        that
-                            .search( item.value )
-                            //.adjust()
-                            .draw();
+                        that.search( item.value ).draw();
                     }
                     searchWait = 0;
                 }
@@ -208,7 +210,7 @@ $(document).ready(function(){
         columns.forEach(function(is_visible, index) {
             $.each($('tr', datatable.table().header()), function() {
                 var col = $($(this).children()[index]);
-                        is_visible == true ? col.show() : col.hide();
+                    is_visible == true ? col.show() : col.hide();
             });
         });
     });

@@ -147,12 +147,14 @@ class FondantComponent extends Component
 	public function view($param = null)
 	{
 		$entity = $this->_findEntity($param);
+		//$this->log(json_encode($entity, JSON_PRETTY_PRINT));
 		$controller = $this->_registry->getController();
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		if ($controller->request->{$getMethod}('flatten') > 0){
 			$entity = Hash::flatten($entity->toArray());
 		}
 		$singularName = $this->_singularName($controller->name);
+		$this->log($singularName);
 		$controller->set($singularName, $entity);
 		$controller->set('_serialize', [ $singularName ]);
 		$controller->render("{$controller->name}/view");
@@ -412,11 +414,11 @@ class FondantComponent extends Component
 		$controller = $this->_registry->getController();
 		$model = $this->getModelName();
 		$primaryKey = (array)$controller->{$model}->getPrimaryKey();
-		return $controller->{$model}->find()
+		$query = $controller->{$model}->find()
 		    ->select($this->_getFields())
 		    ->contain($this->_getContain())
-		    ->where(["{$model}.{$primaryKey[0]}" => $id])
-		    ->first();
+		    ->where(["{$model}.{$primaryKey[0]}" => $id]);
+		return $query->first();
 	}
 
 	protected function _findByName($name)
@@ -424,11 +426,11 @@ class FondantComponent extends Component
 		$controller = $this->_registry->getController();
 		$model = $this->getModelName();
 		$displayField = $controller->{$model}->getDisplayField();
-		return $controller->{$model}->find()
+		$query = $controller->{$model}->find()
 		    ->select($this->_getFields())
 		    ->contain($this->_getContain())
-		    ->where(["{$model}.{$displayField}" => "$name"])
-		    ->first();
+		    ->where(["{$model}.{$displayField}" => "$name"]);
+		return $query->first();
 	}
 
 	protected function _getSearchConditions(){
