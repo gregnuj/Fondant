@@ -129,7 +129,6 @@
                 <th class="rspv notsearchable" scope="col" style="min-width: 25px" ></th>
                 <th class="actions notsearchable" scope="col" style="min-width: 70px" ><?= __('Actions') ?></th>
 {% for field in details.fields %}
-<!-- {{ otherPk }}  -->
 {% set isKey = false %}
 {% if field ends with '_id' %}
 {% set isKey = true %}
