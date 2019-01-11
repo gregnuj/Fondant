@@ -257,6 +257,7 @@ class FondantComponent extends Component
 		}elseif ($controller->request->getQuery('types')){
 			$types = $controller->request->getQuery('types');
 		}else{
+			#$types = ['BelongsTo'];
 			$types = ['BelongsTo', 'BelongsToMany', 'HasMany', 'HasOne'];
 		}
 		return $types;
@@ -337,6 +338,8 @@ class FondantComponent extends Component
 				$cparts = array_slice($oparts, 0, -1);
 				$requested[] = implode('.', $cparts);
 			}
+		}else if ($this->request->getParam('action') == 'index'){
+			$requested = $this->_getAssociations($modelObj, ['BelongsTo'], $depth);
 		}else{
 			$requested = $assocs;
 		}
