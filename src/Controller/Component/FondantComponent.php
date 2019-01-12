@@ -147,14 +147,13 @@ class FondantComponent extends Component
 	public function view($param = null)
 	{
 		$entity = $this->_findEntity($param);
-		//$this->log(json_encode($entity, JSON_PRETTY_PRINT));
 		$controller = $this->_registry->getController();
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
 		if ($controller->request->{$getMethod}('flatten') > 0){
 			$entity = Hash::flatten($entity->toArray());
 		}
 		$singularName = $this->_singularName($controller->name);
-		$this->log($singularName);
+		//$this->log($singularName);
 		$controller->set($singularName, $entity);
 		$controller->set('_serialize', [ $singularName ]);
 		$controller->render("{$controller->name}/view");
@@ -359,6 +358,7 @@ class FondantComponent extends Component
 		$model = $this->getModelName();
 		$modelObj = $controller->{$model};
 		$getMethod = $controller->request->is('post') ? 'getData' : 'getQuery';
+		//$this->log(json_encode([$model, $getMethod], JSON_PRETTY_PRINT));
 		if ($controller->request->{$getMethod}('fields')){
 			$gotFields = (array)$controller->request->{$getMethod}('fields');
 			$fields = [];
@@ -417,10 +417,13 @@ class FondantComponent extends Component
 		$controller = $this->_registry->getController();
 		$model = $this->getModelName();
 		$primaryKey = (array)$controller->{$model}->getPrimaryKey();
+		$fields = $this->_getFields();
+		$contain = $this->_getContain();
 		$query = $controller->{$model}->find()
-		    ->select($this->_getFields())
-		    ->contain($this->_getContain())
+		    ->select($fields)
+		    ->contain($contain)
 		    ->where(["{$model}.{$primaryKey[0]}" => $id]);
+		//$this->log($query->sql());
 		return $query->first();
 	}
 
@@ -433,6 +436,7 @@ class FondantComponent extends Component
 		    ->select($this->_getFields())
 		    ->contain($this->_getContain())
 		    ->where(["{$model}.{$displayField}" => "$name"]);
+		//$this->log($query->sql());
 		return $query->first();
 	}
 
