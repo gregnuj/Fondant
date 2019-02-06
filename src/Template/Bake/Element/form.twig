@@ -19,7 +19,7 @@
 {% set associationFields = fieldsData.associationFields %}
 
 <div class="{{ pluralVar }} form large-9 medium-8 columns content">
-    <?= $this->Form->create(isset(${{ singularVar }}) ? ${{ singularVar }} : '{{ singularVar }}') ?>
+    <?= $this->Form->create(${{ singularVar }}) ?>
     <fieldset>
         <legend><?= __('{{ action|humanize }} {{ singularHumanName }}') ?></legend>
         <?php

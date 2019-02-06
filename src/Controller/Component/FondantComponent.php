@@ -6,7 +6,6 @@ use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
-use Bake\View\Helper\BakeHelper;
 use Cake\Event\Event;
 
 /**
@@ -174,6 +173,7 @@ class FondantComponent extends Component
 		$entity = $this->_findEntity($param);
 		$singularName = $this->_singularName($controller->name);
 		if ($controller->request->is(['patch', 'post', 'put'])) {
+			debug($controller->request->getData()); die;
 			$entity = $controller->{$model}->patchEntity($entity, $controller->request->data);
 			if ($controller->{$model}->save($entity)) {
 				$controller->Flash->success(__("The {$singularName} has been saved."));
@@ -208,6 +208,8 @@ class FondantComponent extends Component
 				$controller->Flash->error(__("The new {$singularName} could not be saved. Please, try again."));
 			}
 		}
+		$controller->set($singularName, $entity);
+		$controller->set('_serialize', [ $singularName ]);
 	}
 
 	/**
@@ -276,12 +278,9 @@ class FondantComponent extends Component
 
 	protected function _getAssociationList($modelObj, $types){
 		$associations = [];
-		$bake = new BakeHelper(new \Cake\View\View);
-		foreach ((array)$types as $type){
-			$these = $bake->aliasExtractor($modelObj, $type);
-			foreach ($these as $association){
-				$associations[] = $association;
-			}
+		$collection = ($modelObj->associations());
+		foreach ($collection as $table){
+		    $associations[] = $table->getAlias();
 		}
 		sort($associations);
 		return $associations;
