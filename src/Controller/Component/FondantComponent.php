@@ -173,7 +173,6 @@ class FondantComponent extends Component
 		$entity = $this->_findEntity($param);
 		$singularName = $this->_singularName($controller->name);
 		if ($controller->request->is(['patch', 'post', 'put'])) {
-			debug($controller->request->getData()); die;
 			$entity = $controller->{$model}->patchEntity($entity, $controller->request->data);
 			if ($controller->{$model}->save($entity)) {
 				$controller->Flash->success(__("The {$singularName} has been saved."));
