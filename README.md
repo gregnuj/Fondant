@@ -8,8 +8,10 @@ Fondant attempts improve upon the default templates in CakePHP to allow for an i
 * CakePHP 3.6.0 or greater.
 * PHP 5.6 or greater
 
-## Install
+## Prerequisites
+Enable JSON [resource routing](https://book.cakephp.org/3.0/en/development/routing.html#resource-routes) for your CakePHP application.
 
+## Install
 ```
 composer require gregnuj/fondant:*
 ```
@@ -105,9 +107,11 @@ class AliasesController extends AppController
 }
 ```
 
+You can use the FondantComponent methods and modify the Controller method as well, but be aware that the `_serialize` variable is used to generate the JSON for datatables to consume.  
+
 ## Using JqueryUiComponent in your controllers
 The JqueryUiComponent provides server-side function to support jquery used in the templates.
 
 [Select2]() methods:
-select2 - provides lists for [select2](https://select2.org/) dropdowns in add/edit templates
-autocomplete - filters the lists for [select2(https://select2.org/) inputs
+* select2 - provides lists for [select2](https://select2.org/) dropdowns in add/edit templates
+* autocomplete - filters the lists for [select2(https://select2.org/) inputs
