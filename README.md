@@ -11,6 +11,11 @@ Fondant attempts improve upon the default templates in CakePHP to allow for an i
 ## Prerequisites
 Enable JSON [resource routing](https://book.cakephp.org/3.0/en/development/routing.html#resource-routes) for your CakePHP application.
 
+Use composer to intstall [foxy](https://github.com/fxpio/foxy):
+```
+composer require foxy/foxy": "^1.0.0"
+```
+
 ## Install
 ```
 composer require gregnuj/fondant:*
