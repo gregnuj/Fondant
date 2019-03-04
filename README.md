@@ -114,4 +114,4 @@ The JqueryUiComponent provides server-side function to support jquery used in th
 
 [Select2]() methods:
 * select2 - provides lists for [select2](https://select2.org/) dropdowns in add/edit templates
-* autocomplete - filters the lists for [select2(https://select2.org/) inputs
+* autocomplete - filters the lists for [select2](https://select2.org/) inputs
