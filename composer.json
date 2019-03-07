@@ -3,13 +3,19 @@
     "description": "Fondant plugin for CakePHP 3",
     "type": "cakephp-plugin",
     "keywords": ["cakephp", "fondant"],
-    "homepage": "https://github.com/gregnuj/fondant",
+    "homepage": "https://github.com/gregnuj/cakephp-fondant",
     "license": "MIT",
     "authors": [
         {
-           "name": "Greg Junge"
+            "name": "Greg Junge",
+            "email": "gregnuj@gmail.com"
         }
     ],
+    "support": {
+        "source": "https://github.com/gregnuj/cakephp-fondant",
+        "issues": "https://github.com/gregnuj/cakephp-fondant/issues",
+        "wiki": "https://github.com/gregnuj/cakephp-fondant/wiki"
+    },
     "require": {
         "php": ">=5.6.0",
         "cakephp/cakephp": "^3.6.0",
@@ -20,11 +26,6 @@
     "require-dev": {
         "cakephp/cakephp-codesniffer": "^3.0",
         "phpunit/phpunit": "^5.7.14|^6.0"
-    },
-    "config": {
-        "foxy": {
-            "manager": "yarn"
-        }
     },
     "autoload": {
         "psr-4": {
