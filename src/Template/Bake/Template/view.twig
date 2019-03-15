@@ -103,17 +103,18 @@
         </tr>
 {% endfor %}
 {% endif %}
-    </table>
 {% if groupedFields.text %}
 {% for field in groupedFields.text %}
-    <div class="row">
-        <h4><?= __('{{ field|humanize }}') ?></h4>
-        <?= $this->Text->autoParagraph(h(${{ singularVar }}->{{ field }})); ?>
-    </div>
+        <tr>
+            <th scope="row"><?= __('{{ field|humanize }}') ?></th>
+            <td><?= $this->Text->autoParagraph(h(${{ singularVar }}->{{ field }})); ?></td>
+            <td></td>
+        </tr>
 {% endfor %}
 {% endif %}
+    </table>
 
-{% set relations = associations.BelongsToMany|merge(associations.HasMany) %}
+{% set relations = associations.HasMany %}
 {% for alias, details in relations %}
 {% set otherSingularVar = alias|variable %}
 {% set otherPluralVar = otherSingularVar|pluralize %}

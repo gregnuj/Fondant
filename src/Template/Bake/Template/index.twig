@@ -62,13 +62,16 @@ $(document).ready(function(){
         "buttons": [
             { extend: 'pageLength', className: 'btn btn-outline-info buttons-collection dropdown-toggle buttons-page-length' },
             { extend: 'csv', className: 'btn btn-outline-info buttons-csv buttons-html5' },
-            { extend: 'excel', className: 'btn btn-outline-info buttons-excel buttons-html5' },
+            { extend: 'excel', className: 'btn btn-outline-info buttons-excel buttons-html5' 
+	    <?php if (isset($allowed['Add'])): ?>
+	    },
             {
                 text: 'Add',
                 className: 'btn btn-outline-info buttons-html5',
                 action: function ( e, dt, node, config ) {
                     window.location = "<?= $this->Url->build(['action' => 'add']); ?>";
                 }
+	    <?php endif; ?>
             }
         ],
         "lengthMenu": [[50, 100, 250, 500, 1000, 5000], [50, 100, 250, 500, 1000, "Max"]],
@@ -130,7 +133,7 @@ $(document).ready(function(){
                     "render": function ( data, type, row, meta ) {
                         retval=""
                         retval+="<a href='<?= $this->Url->build(['action' => 'view']); ?>/"+data+"' class='btn btn-success text-white' role='button'><i class='fas fa-arrow-right'></i></a>"                      
-                        retval+="<a href='<?= $this->Url->build(['action' => 'edit']); ?>/"+data+"' class='btn btn-warning text-white' role='button'><i class='fas fa-edit'></i></a>"
+                        retval+="<?php if (isset($allowed['Edit'])): ?><a href='<?= $this->Url->build(['action' => 'edit']); ?>/"+data+"' class='btn btn-warning text-white' role='button'><i class='fas fa-edit'></i></a><?php endif; ?>"
                         return retval;
                     }
                 },
